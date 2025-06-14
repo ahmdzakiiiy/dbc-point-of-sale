@@ -56,7 +56,8 @@ export default function StockPage() {
   const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
   const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false)
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
-  const [addStockQuantity, setAddStockQuantity] = useState("")  const [newProduct, setNewProduct] = useState<Omit<Product, "id"> & { formattedPrice: string }>({
+  const [addStockQuantity, setAddStockQuantity] = useState("")
+  const [newProduct, setNewProduct] = useState<Omit<Product, "id"> & { formattedPrice: string }>({
     name: "",
     stock: 0,
     price: 0,
@@ -119,11 +120,11 @@ export default function StockPage() {
       reader.readAsDataURL(file)
     }
   }
-
   const handleAddProduct = () => {
     const id = Math.max(0, ...products.map((p) => p.id)) + 1
-    setProducts([...products, { id, ...newProduct }])
-    setNewProduct({ name: "", stock: 0, price: 0, image: "" })
+    const { formattedPrice, ...productData } = newProduct
+    setProducts([...products, { id, ...productData }])
+    setNewProduct({ name: "", stock: 0, price: 0, formattedPrice: "", image: "" })
     setImagePreview("")
     setIsAddModalOpen(false)
   }
@@ -154,9 +155,12 @@ export default function StockPage() {
       }
     }
   }
-
   const openEditModal = (product: Product) => {
-    setCurrentProduct(product)
+    const productWithFormattedPrice = {
+      ...product,
+      formattedPrice: formatPrice(product.price)
+    };
+    setCurrentProduct(productWithFormattedPrice as Product & { formattedPrice: string })
     setImagePreview(product.image || "")
     setIsEditModalOpen(true)
   }
@@ -377,33 +381,45 @@ export default function StockPage() {
                   placeholder="Masukkan nama produk"
                 />
                 <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
-              </div>
-              <div className="space-y-2">
+              </div>              <div className="space-y-2">
                 <Label htmlFor="stock">Stok</Label>
                 <Input
                   id="stock"
                   type="number"
-                  value={newProduct.stock}
-                  onChange={(e) =>
+                  min="0"
+                  placeholder="Masukkan jumlah stok"
+                  value={newProduct.stock || ''}
+                  onChange={(e) => {
+                    const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value));
                     setNewProduct({
                       ...newProduct,
-                      stock: Number.parseInt(e.target.value) || 0,
-                    })
-                  }
+                      stock: value,
+                    });
+                  }}
                 />
-              </div>
-              <div className="space-y-2">
+              </div>              <div className="space-y-2">
                 <Label htmlFor="price">Harga (Rp)</Label>
                 <Input
                   id="price"
-                  type="number"
-                  value={newProduct.price}
-                  onChange={(e) =>
+                  value={newProduct.formattedPrice}
+                  placeholder="Masukkan harga produk"
+                  onChange={(e) => {
+                    // Remove any non-numeric characters except dots
+                    const inputValue = e.target.value.replace(/[^\d.]/g, '');
+                    // Only allow one dot
+                    const dotIndex = inputValue.indexOf('.');
+                    const cleanedValue = dotIndex !== -1 
+                      ? inputValue.substring(0, dotIndex + 1) + inputValue.substring(dotIndex + 1).replace(/\./g, '')
+                      : inputValue;
+                    
+                    const numericValue = getNumericValue(cleanedValue);
+                    
                     setNewProduct({
                       ...newProduct,
-                      price: Number.parseInt(e.target.value) || 0,
-                    })
-                  }
+                      formattedPrice: formatPrice(cleanedValue),
+                      price: numericValue,
+                    });
+                  }}
                 />
               </div>
             </div>
@@ -470,33 +486,45 @@ export default function StockPage() {
                     placeholder="Masukkan nama produk (hanya huruf)"
                   />
                   <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
-                </div>
-                <div className="space-y-2">
+                </div>                <div className="space-y-2">
                   <Label htmlFor="edit-stock">Stok</Label>
                   <Input
                     id="edit-stock"
                     type="number"
-                    value={currentProduct.stock}
-                    onChange={(e) =>
+                    min="0"
+                    placeholder="Masukkan jumlah stok"
+                    value={currentProduct.stock || ''}
+                    onChange={(e) => {
+                      const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value));
                       setCurrentProduct({
                         ...currentProduct,
-                        stock: Number.parseInt(e.target.value) || 0,
-                      })
-                    }
+                        stock: value,
+                      });
+                    }}
                   />
-                </div>
-                <div className="space-y-2">
+                </div>                <div className="space-y-2">
                   <Label htmlFor="edit-price">Harga (Rp)</Label>
                   <Input
                     id="edit-price"
-                    type="number"
-                    value={currentProduct.price}
-                    onChange={(e) =>
+                    value={(currentProduct as any).formattedPrice || formatPrice(currentProduct.price)}
+                    placeholder="Masukkan harga produk"
+                    onChange={(e) => {
+                      // Remove any non-numeric characters except dots
+                      const inputValue = e.target.value.replace(/[^\d.]/g, '');
+                      // Only allow one dot
+                      const dotIndex = inputValue.indexOf('.');
+                      const cleanedValue = dotIndex !== -1 
+                        ? inputValue.substring(0, dotIndex + 1) + inputValue.substring(dotIndex + 1).replace(/\./g, '')
+                        : inputValue;
+                      
+                      const numericValue = getNumericValue(cleanedValue);
+                      
                       setCurrentProduct({
                         ...currentProduct,
-                        price: Number.parseInt(e.target.value) || 0,
-                      })
-                    }
+                        formattedPrice: formatPrice(cleanedValue),
+                        price: numericValue,
+                      } as any);
+                    }}
                   />
                 </div>
               </div>
