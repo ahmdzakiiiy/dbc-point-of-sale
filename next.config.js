@@ -1,3 +1,4 @@
+/** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
@@ -9,6 +10,8 @@ const nextConfig = {
     domains: ["placeholder.svg"],
     unoptimized: true,
   },
+  output: 'standalone',
+  swcMinify: true,
 }
 
 module.exports = nextConfig
