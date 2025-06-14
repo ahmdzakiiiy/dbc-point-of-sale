@@ -12,6 +12,9 @@ const nextConfig = {
   },
   output: 'standalone',
   swcMinify: true,
+  experimental: {
+    esmExternals: 'loose'
+  }
 }
 
 module.exports = nextConfig
