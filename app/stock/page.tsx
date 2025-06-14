@@ -360,7 +360,7 @@ export default function StockPage() {
                   value={newProduct.name}
                   onChange={(e) => handleProductNameChange(e.target.value, false)}
                   onKeyPress={handleProductNameKeyPress}
-                  placeholder="Masukkan nama produk (hanya huruf)"
+                  placeholder="Masukkan nama produk"
                 />
                 <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
               </div>
