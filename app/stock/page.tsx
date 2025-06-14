@@ -1,12 +1,19 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -14,9 +21,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,163 +33,233 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Pencil, Plus, Trash, PackagePlus, Search, Upload, X } from "lucide-react"
-import DashboardNav from "@/components/dashboard-nav"
+} from "@/components/ui/alert-dialog";
+import {
+  Pencil,
+  Plus,
+  Trash,
+  PackagePlus,
+  Search,
+  Upload,
+  X,
+} from "lucide-react";
+import DashboardNav from "@/components/dashboard-nav";
 
 // Initial product data with images
 const initialProducts = [
-  { id: 1, name: "Daster Anaya Pink", stock: 15, price: 120000, image: "/placeholder.svg?height=200&width=200" },
-  { id: 2, name: "Daster Busui Kuning", stock: 8, price: 135000, image: "/placeholder.svg?height=200&width=200" },
-  { id: 3, name: "Gamis Putih", stock: 3, price: 185000, image: "/placeholder.svg?height=200&width=200" },
-  { id: 4, name: "Dress Hitam", stock: 12, price: 150000, image: "/placeholder.svg?height=200&width=200" },
-  { id: 5, name: "Kemeja Navy", stock: 4, price: 110000, image: "/placeholder.svg?height=200&width=200" },
-  { id: 6, name: "Kaftan Coklat", stock: 7, price: 165000, image: "/placeholder.svg?height=200&width=200" },
-]
+  {
+    id: 1,
+    name: "Daster Anaya Pink",
+    stock: 15,
+    price: 120000,
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 2,
+    name: "Daster Busui Kuning",
+    stock: 8,
+    price: 135000,
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 3,
+    name: "Gamis Putih",
+    stock: 3,
+    price: 185000,
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 4,
+    name: "Dress Hitam",
+    stock: 12,
+    price: 150000,
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 5,
+    name: "Kemeja Navy",
+    stock: 4,
+    price: 110000,
+    image: "/placeholder.svg?height=200&width=200",
+  },
+  {
+    id: 6,
+    name: "Kaftan Coklat",
+    stock: 7,
+    price: 165000,
+    image: "/placeholder.svg?height=200&width=200",
+  },
+];
 
 type Product = {
-  id: number
-  name: string
-  stock: number
-  price: number
-  image?: string
-}
+  id: number;
+  name: string;
+  stock: number;
+  price: number;
+  image?: string;
+};
 
 export default function StockPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
-  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false)
-  const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false)
-  const [currentProduct, setCurrentProduct] = useState<Product | null>(null)
-  const [addStockQuantity, setAddStockQuantity] = useState("")
-  const [newProduct, setNewProduct] = useState<Omit<Product, "id"> & { formattedPrice: string }>({
+  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [isAddStockModalOpen, setIsAddStockModalOpen] = useState(false);
+  const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
+  const [addStockQuantity, setAddStockQuantity] = useState("");
+  const [newProduct, setNewProduct] = useState<
+    Omit<Product, "id"> & { formattedPrice: string }
+  >({
     name: "",
     stock: 0,
     price: 0,
     formattedPrice: "",
     image: "",
-  })
-  const [imagePreview, setImagePreview] = useState<string>("")
+  });
+  const [imagePreview, setImagePreview] = useState<string>("");
 
   // Format price with thousands separator
   const formatPrice = (price: number | string): string => {
-    if (typeof price === 'string' && price === '') return '';
-    const numericValue = typeof price === 'string' 
-      ? Number(price.replace(/\./g, '')) 
-      : price;
-    return numericValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-  }
+    if (typeof price === "string" && price === "") return "";
+    const numericValue =
+      typeof price === "string" ? Number(price.replace(/\./g, "")) : price;
+    return numericValue.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  };
 
   // Get numeric value from formatted price string
   const getNumericValue = (formattedValue: string): number => {
-    return Number(formattedValue.replace(/\./g, '')) || 0;
-  }
+    return Number(formattedValue.replace(/\./g, "")) || 0;
+  };
 
   // Filter products based on search term
-  const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Handle product name input - only allow text characters
   const handleProductNameChange = (value: string, isEdit = false) => {
     // Remove any numeric characters and special characters except spaces and common punctuation
-    const textOnlyValue = value.replace(/[0-9]/g, "").replace(/[^\w\s\-.]/g, "")
+    const textOnlyValue = value
+      .replace(/[0-9]/g, "")
+      .replace(/[^\w\s\-.]/g, "");
 
     if (isEdit && currentProduct) {
-      setCurrentProduct({ ...currentProduct, name: textOnlyValue })
+      setCurrentProduct({ ...currentProduct, name: textOnlyValue });
     } else {
-      setNewProduct({ ...newProduct, name: textOnlyValue })
+      setNewProduct({ ...newProduct, name: textOnlyValue });
     }
-  }
+  };
 
   // Handle product name key press validation
-  const handleProductNameKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleProductNameKeyPress = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ) => {
     // Prevent numeric input
     if (/[0-9]/.test(e.key)) {
-      e.preventDefault()
+      e.preventDefault();
     }
-  }
+  };
 
-  const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>, isEdit = false) => {
-    const file = event.target.files?.[0]
+  const handleImageUpload = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    isEdit = false
+  ) => {
+    const file = event.target.files?.[0];
     if (file) {
-      const reader = new FileReader()
+      const reader = new FileReader();
       reader.onload = (e) => {
-        const imageUrl = e.target?.result as string
-        setImagePreview(imageUrl)
+        const imageUrl = e.target?.result as string;
+        setImagePreview(imageUrl);
 
         if (isEdit && currentProduct) {
-          setCurrentProduct({ ...currentProduct, image: imageUrl })
+          setCurrentProduct({ ...currentProduct, image: imageUrl });
         } else {
-          setNewProduct({ ...newProduct, image: imageUrl })
+          setNewProduct({ ...newProduct, image: imageUrl });
         }
-      }
-      reader.readAsDataURL(file)
+      };
+      reader.readAsDataURL(file);
     }
-  }
+  };
   const handleAddProduct = () => {
-    const id = Math.max(0, ...products.map((p) => p.id)) + 1
-    const { formattedPrice, ...productData } = newProduct
-    setProducts([...products, { id, ...productData }])
-    setNewProduct({ name: "", stock: 0, price: 0, formattedPrice: "", image: "" })
-    setImagePreview("")
-    setIsAddModalOpen(false)
-  }
+    const id = Math.max(0, ...products.map((p) => p.id)) + 1;
+    const { formattedPrice, ...productData } = newProduct;
+    setProducts([...products, { id, ...productData }]);
+    setNewProduct({
+      name: "",
+      stock: 0,
+      price: 0,
+      formattedPrice: "",
+      image: "",
+    });
+    setImagePreview("");
+    setIsAddModalOpen(false);
+  };
 
   const handleEditProduct = () => {
     if (currentProduct) {
-      setProducts(products.map((p) => (p.id === currentProduct.id ? currentProduct : p)))
-      setIsEditModalOpen(false)
-      setImagePreview("")
+      setProducts(
+        products.map((p) => (p.id === currentProduct.id ? currentProduct : p))
+      );
+      setIsEditModalOpen(false);
+      setImagePreview("");
     }
-  }
+  };
 
   const handleDeleteProduct = () => {
     if (currentProduct) {
-      setProducts(products.filter((p) => p.id !== currentProduct.id))
-      setIsDeleteAlertOpen(false)
+      setProducts(products.filter((p) => p.id !== currentProduct.id));
+      setIsDeleteAlertOpen(false);
     }
-  }
+  };
 
   const handleAddStock = () => {
     if (currentProduct && addStockQuantity) {
-      const quantityToAdd = Number.parseInt(addStockQuantity)
+      const quantityToAdd = Number.parseInt(addStockQuantity);
       if (quantityToAdd > 0) {
-        setProducts(products.map((p) => (p.id === currentProduct.id ? { ...p, stock: p.stock + quantityToAdd } : p)))
-        setIsAddStockModalOpen(false)
-        setAddStockQuantity("")
-        setCurrentProduct(null)
+        setProducts(
+          products.map((p) =>
+            p.id === currentProduct.id
+              ? { ...p, stock: p.stock + quantityToAdd }
+              : p
+          )
+        );
+        setIsAddStockModalOpen(false);
+        setAddStockQuantity("");
+        setCurrentProduct(null);
       }
     }
-  }
+  };
   const openEditModal = (product: Product) => {
     const productWithFormattedPrice = {
       ...product,
-      formattedPrice: formatPrice(product.price)
+      formattedPrice: formatPrice(product.price),
     };
-    setCurrentProduct(productWithFormattedPrice as Product & { formattedPrice: string })
-    setImagePreview(product.image || "")
-    setIsEditModalOpen(true)
-  }
+    setCurrentProduct(
+      productWithFormattedPrice as Product & { formattedPrice: string }
+    );
+    setImagePreview(product.image || "");
+    setIsEditModalOpen(true);
+  };
 
   const openDeleteAlert = (product: Product) => {
-    setCurrentProduct(product)
-    setIsDeleteAlertOpen(true)
-  }
+    setCurrentProduct(product);
+    setIsDeleteAlertOpen(true);
+  };
 
   const openAddStockModal = (product: Product) => {
-    setCurrentProduct(product)
-    setIsAddStockModalOpen(true)
-  }
+    setCurrentProduct(product);
+    setIsAddStockModalOpen(true);
+  };
 
   const removeImage = (isEdit = false) => {
-    setImagePreview("")
+    setImagePreview("");
     if (isEdit && currentProduct) {
-      setCurrentProduct({ ...currentProduct, image: "" })
+      setCurrentProduct({ ...currentProduct, image: "" });
     } else {
-      setNewProduct({ ...newProduct, image: "" })
+      setNewProduct({ ...newProduct, image: "" });
     }
-  }
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -201,7 +278,10 @@ export default function StockPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button onClick={() => setIsAddModalOpen(true)} className="bg-violet-500 hover:bg-violet-600">
+            <Button
+              onClick={() => setIsAddModalOpen(true)}
+              className="bg-violet-500 hover:bg-violet-600"
+            >
               <Plus className="mr-2 h-4 w-4" /> Tambah Produk
             </Button>
           </div>
@@ -228,7 +308,10 @@ export default function StockPage() {
                     <TableCell>
                       <div className="w-16 h-16 overflow-hidden rounded-md bg-gray-100">
                         <Image
-                          src={product.image || "/placeholder.svg?height=64&width=64"}
+                          src={
+                            product.image ||
+                            "/placeholder.svg?height=64&width=64"
+                          }
                           alt={product.name}
                           width={64}
                           height={64}
@@ -236,11 +319,21 @@ export default function StockPage() {
                         />
                       </div>
                     </TableCell>
-                    <TableCell className="font-medium">{product.name}</TableCell>
-                    <TableCell className="text-center">
-                      <span className={product.stock < 5 ? "text-red-500 font-medium" : ""}>{product.stock}</span>
+                    <TableCell className="font-medium">
+                      {product.name}
                     </TableCell>
-                    <TableCell className="text-center">Rp {product.price.toLocaleString("id-ID")}</TableCell>
+                    <TableCell className="text-center">
+                      <span
+                        className={
+                          product.stock < 5 ? "text-red-500 font-medium" : ""
+                        }
+                      >
+                        {product.stock}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-center">
+                      Rp {product.price.toLocaleString("id-ID")}
+                    </TableCell>
                     <TableCell className="text-center">
                       <div className="flex justify-center gap-1">
                         <Button
@@ -252,7 +345,12 @@ export default function StockPage() {
                         >
                           <PackagePlus className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => openEditModal(product)} title="Edit Produk">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => openEditModal(product)}
+                          title="Edit Produk"
+                        >
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <Button
@@ -270,8 +368,13 @@ export default function StockPage() {
                 ))}
                 {filteredProducts.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                      {searchTerm ? "Tidak ada produk yang ditemukan" : "Belum ada produk"}
+                    <TableCell
+                      colSpan={5}
+                      className="text-center py-8 text-muted-foreground"
+                    >
+                      {searchTerm
+                        ? "Tidak ada produk yang ditemukan"
+                        : "Belum ada produk"}
                     </TableCell>
                   </TableRow>
                 )}
@@ -281,21 +384,32 @@ export default function StockPage() {
         </Card>
 
         {/* Add Stock Modal */}
-        <Dialog open={isAddStockModalOpen} onOpenChange={setIsAddStockModalOpen}>
+        <Dialog
+          open={isAddStockModalOpen}
+          onOpenChange={setIsAddStockModalOpen}
+        >
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Tambah Stok</DialogTitle>
               <DialogDescription>
-                Tambah stok untuk produk: <span className="font-medium">{currentProduct?.name}</span>
+                Tambah stok untuk produk:{" "}
+                <span className="font-medium">{currentProduct?.name}</span>
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="p-4 bg-gray-50 rounded-lg">
-                <div className="text-sm text-muted-foreground">Stok saat ini:</div>
-                <div className="text-2xl font-bold">{currentProduct?.stock}</div>
+                <div className="text-sm text-muted-foreground">
+                  Stok saat ini:
+                </div>
+                <div className="text-2xl font-bold">
+                  {currentProduct?.stock}
+                </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="add-stock-quantity">Jumlah Stok yang Ditambahkan</Label>                <Input
+                <Label htmlFor="add-stock-quantity">
+                  Jumlah Stok yang Ditambahkan
+                </Label>{" "}
+                <Input
                   id="add-stock-quantity"
                   type="number"
                   min="1"
@@ -304,7 +418,7 @@ export default function StockPage() {
                   onChange={(e) => {
                     // Only allow positive numbers
                     const value = e.target.value;
-                    if (value === '' || parseInt(value) > 0) {
+                    if (value === "" || parseInt(value) > 0) {
                       setAddStockQuantity(value);
                     }
                   }}
@@ -312,9 +426,12 @@ export default function StockPage() {
               </div>
               {addStockQuantity && Number.parseInt(addStockQuantity) > 0 && (
                 <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <div className="text-sm text-green-700">Stok setelah penambahan:</div>
+                  <div className="text-sm text-green-700">
+                    Stok setelah penambahan:
+                  </div>
                   <div className="text-xl font-bold text-green-800">
-                    {(currentProduct?.stock || 0) + Number.parseInt(addStockQuantity)}
+                    {(currentProduct?.stock || 0) +
+                      Number.parseInt(addStockQuantity)}
                   </div>
                 </div>
               )}
@@ -323,7 +440,9 @@ export default function StockPage() {
               <Button
                 onClick={handleAddStock}
                 className="bg-green-500 hover:bg-green-600"
-                disabled={!addStockQuantity || Number.parseInt(addStockQuantity) <= 0}
+                disabled={
+                  !addStockQuantity || Number.parseInt(addStockQuantity) <= 0
+                }
               >
                 <PackagePlus className="mr-2 h-4 w-4" />
                 Tambah Stok
@@ -337,7 +456,9 @@ export default function StockPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Tambah Produk Baru</DialogTitle>
-              <DialogDescription>Masukkan detail produk baru di bawah ini.</DialogDescription>
+              <DialogDescription>
+                Masukkan detail produk baru di bawah ini.
+              </DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
@@ -381,28 +502,37 @@ export default function StockPage() {
                 <Input
                   id="name"
                   value={newProduct.name}
-                  onChange={(e) => handleProductNameChange(e.target.value, false)}
+                  onChange={(e) =>
+                    handleProductNameChange(e.target.value, false)
+                  }
                   onKeyPress={handleProductNameKeyPress}
                   placeholder="Masukkan nama produk"
                 />
-                <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
-              </div>              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Hanya huruf dan spasi yang diperbolehkan
+                </p>
+              </div>{" "}
+              <div className="space-y-2">
                 <Label htmlFor="stock">Stok</Label>
                 <Input
                   id="stock"
                   type="number"
                   min="0"
                   placeholder="Masukkan jumlah stok"
-                  value={newProduct.stock || ''}
+                  value={newProduct.stock || ""}
                   onChange={(e) => {
-                    const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value));
+                    const value =
+                      e.target.value === ""
+                        ? 0
+                        : Math.max(0, parseInt(e.target.value));
                     setNewProduct({
                       ...newProduct,
                       stock: value,
                     });
                   }}
                 />
-              </div>              <div className="space-y-2">
+              </div>{" "}
+              <div className="space-y-2">
                 <Label htmlFor="price">Harga (Rp)</Label>
                 <Input
                   id="price"
@@ -410,15 +540,17 @@ export default function StockPage() {
                   placeholder="Masukkan harga produk"
                   onChange={(e) => {
                     // Remove any non-numeric characters except dots
-                    const inputValue = e.target.value.replace(/[^\d.]/g, '');
+                    const inputValue = e.target.value.replace(/[^\d.]/g, "");
                     // Only allow one dot
-                    const dotIndex = inputValue.indexOf('.');
-                    const cleanedValue = dotIndex !== -1 
-                      ? inputValue.substring(0, dotIndex + 1) + inputValue.substring(dotIndex + 1).replace(/\./g, '')
-                      : inputValue;
-                    
+                    const dotIndex = inputValue.indexOf(".");
+                    const cleanedValue =
+                      dotIndex !== -1
+                        ? inputValue.substring(0, dotIndex + 1) +
+                          inputValue.substring(dotIndex + 1).replace(/\./g, "")
+                        : inputValue;
+
                     const numericValue = getNumericValue(cleanedValue);
-                    
+
                     setNewProduct({
                       ...newProduct,
                       formattedPrice: formatPrice(cleanedValue),
@@ -429,7 +561,10 @@ export default function StockPage() {
               </div>
             </div>
             <DialogFooter>
-              <Button onClick={handleAddProduct} className="bg-violet-500 hover:bg-violet-600">
+              <Button
+                onClick={handleAddProduct}
+                className="bg-violet-500 hover:bg-violet-600"
+              >
                 Simpan
               </Button>
             </DialogFooter>
@@ -441,7 +576,9 @@ export default function StockPage() {
           <DialogContent className="max-w-md">
             <DialogHeader>
               <DialogTitle>Edit Produk</DialogTitle>
-              <DialogDescription>Ubah detail produk di bawah ini.</DialogDescription>
+              <DialogDescription>
+                Ubah detail produk di bawah ini.
+              </DialogDescription>
             </DialogHeader>
             {currentProduct && (
               <div className="space-y-4">
@@ -486,44 +623,60 @@ export default function StockPage() {
                   <Input
                     id="edit-name"
                     value={currentProduct.name}
-                    onChange={(e) => handleProductNameChange(e.target.value, true)}
+                    onChange={(e) =>
+                      handleProductNameChange(e.target.value, true)
+                    }
                     onKeyPress={handleProductNameKeyPress}
                     placeholder="Masukkan nama produk (hanya huruf)"
                   />
-                  <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
-                </div>                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    Hanya huruf dan spasi yang diperbolehkan
+                  </p>
+                </div>{" "}
+                <div className="space-y-2">
                   <Label htmlFor="edit-stock">Stok</Label>
                   <Input
                     id="edit-stock"
                     type="number"
                     min="0"
                     placeholder="Masukkan jumlah stok"
-                    value={currentProduct.stock || ''}
+                    value={currentProduct.stock || ""}
                     onChange={(e) => {
-                      const value = e.target.value === '' ? 0 : Math.max(0, parseInt(e.target.value));
+                      const value =
+                        e.target.value === ""
+                          ? 0
+                          : Math.max(0, parseInt(e.target.value));
                       setCurrentProduct({
                         ...currentProduct,
                         stock: value,
                       });
                     }}
                   />
-                </div>                <div className="space-y-2">
+                </div>{" "}
+                <div className="space-y-2">
                   <Label htmlFor="edit-price">Harga (Rp)</Label>
                   <Input
                     id="edit-price"
-                    value={(currentProduct as any).formattedPrice || formatPrice(currentProduct.price)}
+                    value={
+                      (currentProduct as any).formattedPrice ||
+                      formatPrice(currentProduct.price)
+                    }
                     placeholder="Masukkan harga produk"
                     onChange={(e) => {
                       // Remove any non-numeric characters except dots
-                      const inputValue = e.target.value.replace(/[^\d.]/g, '');
+                      const inputValue = e.target.value.replace(/[^\d.]/g, "");
                       // Only allow one dot
-                      const dotIndex = inputValue.indexOf('.');
-                      const cleanedValue = dotIndex !== -1 
-                        ? inputValue.substring(0, dotIndex + 1) + inputValue.substring(dotIndex + 1).replace(/\./g, '')
-                        : inputValue;
-                      
+                      const dotIndex = inputValue.indexOf(".");
+                      const cleanedValue =
+                        dotIndex !== -1
+                          ? inputValue.substring(0, dotIndex + 1) +
+                            inputValue
+                              .substring(dotIndex + 1)
+                              .replace(/\./g, "")
+                          : inputValue;
+
                       const numericValue = getNumericValue(cleanedValue);
-                      
+
                       setCurrentProduct({
                         ...currentProduct,
                         formattedPrice: formatPrice(cleanedValue),
@@ -535,7 +688,10 @@ export default function StockPage() {
               </div>
             )}
             <DialogFooter>
-              <Button onClick={handleEditProduct} className="bg-violet-500 hover:bg-violet-600">
+              <Button
+                onClick={handleEditProduct}
+                className="bg-violet-500 hover:bg-violet-600"
+              >
                 Simpan Perubahan
               </Button>
             </DialogFooter>
@@ -543,18 +699,25 @@ export default function StockPage() {
         </Dialog>
 
         {/* Delete Confirmation Alert */}
-        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialog
+          open={isDeleteAlertOpen}
+          onOpenChange={setIsDeleteAlertOpen}
+        >
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Konfirmasi Hapus</AlertDialogTitle>
               <AlertDialogDescription>
-                Apakah Anda yakin ingin menghapus produk <span className="font-medium">{currentProduct?.name}</span>?
+                Apakah Anda yakin ingin menghapus produk{" "}
+                <span className="font-medium">{currentProduct?.name}</span>?
                 Tindakan ini tidak dapat dibatalkan.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Batal</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteProduct} className="bg-red-500 hover:bg-red-600">
+              <AlertDialogAction
+                onClick={handleDeleteProduct}
+                className="bg-red-500 hover:bg-red-600"
+              >
                 Hapus
               </AlertDialogAction>
             </AlertDialogFooter>
@@ -562,5 +725,5 @@ export default function StockPage() {
         </AlertDialog>
       </main>
     </div>
-  )
+  );
 }
