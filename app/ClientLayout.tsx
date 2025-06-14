@@ -18,19 +18,24 @@ export default function ClientLayout({
   const pathname = usePathname()
 
   useEffect(() => {
-    // Check authentication status on app load
-    const isLoggedIn = localStorage.getItem("isLoggedIn")
-    const protectedPaths = ["/dashboard", "/cashier", "/stock", "/reports"]
-    const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
+    // Protect against hydration issues by checking if window is defined
+    if (typeof window !== 'undefined') {
+      // Check authentication status on app load
+      const isLoggedIn = localStorage.getItem("isLoggedIn")
+      const protectedPaths = ["/dashboard", "/cashier", "/stock", "/reports"]
+      const isProtectedPath = protectedPaths.some((path) => pathname.startsWith(path))
+      const isRootPath = pathname === "/"
+      const isLoginPath = pathname === "/login"
 
-    // If user is not logged in and trying to access protected route
-    if (!isLoggedIn && isProtectedPath) {
-      router.push("/login")
-    }
+      // If user is not logged in and trying to access protected route or root
+      if (!isLoggedIn && (isProtectedPath || isRootPath)) {
+        router.push("/login")
+      }
 
-    // If user is logged in and on login page, redirect to dashboard
-    if (isLoggedIn && pathname === "/login") {
-      router.push("/dashboard")
+      // If user is logged in and on login page, redirect to dashboard
+      if (isLoggedIn && isLoginPath) {
+        router.push("/dashboard")
+      }
     }
   }, [pathname, router])
 

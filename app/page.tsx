@@ -4,9 +4,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import Image from "next/image"
 
 export default function Home() {
-  // Redirect to login page
+  // This ensures server-side redirect to login page
   redirect("/login")
-
+  
+  // The code below will never execute due to the redirect above
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4">
       <Card className="w-full max-w-md">
