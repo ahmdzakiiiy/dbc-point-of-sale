@@ -276,15 +276,17 @@ export default function StockPage() {
                 <div className="text-sm text-muted-foreground">Stok saat ini:</div>
                 <div className="text-2xl font-bold">{currentProduct?.stock}</div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="add-stock-quantity">Jumlah Stok yang Ditambahkan</Label>
+              <div className="space-y-2">                <Label htmlFor="add-stock-quantity">Jumlah Stok yang Ditambahkan</Label>
                 <Input
                   id="add-stock-quantity"
                   type="number"
                   min="1"
                   placeholder="Masukkan jumlah stok"
                   value={addStockQuantity}
-                  onChange={(e) => setAddStockQuantity(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value === "" ? "" : Math.max(1, Number.parseInt(e.target.value) || 1);
+                    setAddStockQuantity(value.toString());
+                  }}
                 />
               </div>
               {addStockQuantity && Number.parseInt(addStockQuantity) > 0 && (
@@ -363,33 +365,38 @@ export default function StockPage() {
                   placeholder="Masukkan nama produk"
                 />
                 <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
-              </div>
-              <div className="space-y-2">
+              </div>              <div className="space-y-2">
                 <Label htmlFor="stock">Stok</Label>
                 <Input
                   id="stock"
                   type="number"
-                  value={newProduct.stock}
-                  onChange={(e) =>
+                  min="0"
+                  placeholder="Masukkan jumlah stok"
+                  value={newProduct.stock === 0 ? "" : newProduct.stock}
+                  onChange={(e) => {
+                    const value = e.target.value === "" ? "" : Math.max(0, Number.parseInt(e.target.value) || 0);
                     setNewProduct({
                       ...newProduct,
-                      stock: Number.parseInt(e.target.value) || 0,
-                    })
-                  }
+                      stock: value === "" ? 0 : value,
+                    });
+                  }}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="price">Harga (Rp)</Label>
                 <Input
                   id="price"
-                  type="number"
-                  value={newProduct.price}
-                  onChange={(e) =>
+                  type="text"
+                  placeholder="Masukkan harga produk"
+                  value={newProduct.price === 0 ? "" : newProduct.price.toLocaleString("id-ID")}
+                  onChange={(e) => {
+                    const numericValue = e.target.value.replace(/\D/g, "");
+                    const value = numericValue === "" ? 0 : Number.parseInt(numericValue);
                     setNewProduct({
                       ...newProduct,
-                      price: Number.parseInt(e.target.value) || 0,
-                    })
-                  }
+                      price: value,
+                    });
+                  }}
                 />
               </div>
             </div>
@@ -456,33 +463,38 @@ export default function StockPage() {
                     placeholder="Masukkan nama produk (hanya huruf)"
                   />
                   <p className="text-xs text-muted-foreground">Hanya huruf dan spasi yang diperbolehkan</p>
-                </div>
-                <div className="space-y-2">
+                </div>                <div className="space-y-2">
                   <Label htmlFor="edit-stock">Stok</Label>
                   <Input
                     id="edit-stock"
                     type="number"
-                    value={currentProduct.stock}
-                    onChange={(e) =>
+                    min="0"
+                    placeholder="Masukkan jumlah stok"
+                    value={currentProduct.stock === 0 ? "" : currentProduct.stock}
+                    onChange={(e) => {
+                      const value = e.target.value === "" ? "" : Math.max(0, Number.parseInt(e.target.value) || 0);
                       setCurrentProduct({
                         ...currentProduct,
-                        stock: Number.parseInt(e.target.value) || 0,
-                      })
-                    }
+                        stock: value === "" ? 0 : value,
+                      });
+                    }}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-price">Harga (Rp)</Label>
                   <Input
                     id="edit-price"
-                    type="number"
-                    value={currentProduct.price}
-                    onChange={(e) =>
+                    type="text"
+                    placeholder="Masukkan harga produk"
+                    value={currentProduct.price === 0 ? "" : currentProduct.price.toLocaleString("id-ID")}
+                    onChange={(e) => {
+                      const numericValue = e.target.value.replace(/\D/g, "");
+                      const value = numericValue === "" ? 0 : Number.parseInt(numericValue);
                       setCurrentProduct({
                         ...currentProduct,
-                        price: Number.parseInt(e.target.value) || 0,
-                      })
-                    }
+                        price: value,
+                      });
+                    }}
                   />
                 </div>
               </div>
