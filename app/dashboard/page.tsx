@@ -8,13 +8,13 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import DashboardNav from "@/components/dashboard-nav"
 
 // Sample daily sales data for the current month
-const generateDailySalesData = () => {
+const generateDailySalesData = (): DailySalesData[] => {
   const currentDate = new Date()
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
   const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
 
-  const dailyData = []
+  const dailyData: DailySalesData[] = []
   for (let day = 1; day <= Math.min(daysInMonth, 30); day++) {
     const date = new Date(currentYear, currentMonth, day)
     const dayName = date.toLocaleDateString("id-ID", { weekday: "short" })
@@ -39,11 +39,30 @@ const generateDailySalesData = () => {
   return dailyData
 }
 
+// Define interfaces for sales data
+interface SalesDataItem {
+  sales: number;
+  transactions: number;
+  avgTransaction: number;
+}
+
+interface DailySalesData extends SalesDataItem {
+  day: number;
+  date: string;
+  dayName: string;
+}
+
+interface MonthlySalesData extends SalesDataItem {
+  month: number;
+  monthName: string;
+  growth: number;
+}
+
 // Sample monthly sales data for the current year
-const generateMonthlySalesData = () => {
+const generateMonthlySalesData = (): MonthlySalesData[] => {
   const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
 
-  const monthlyData = []
+  const monthlyData: MonthlySalesData[] = []
   for (let month = 0; month < 12; month++) {
     // Generate realistic monthly sales data
     const baseAmount = 5000000 + Math.random() * 3000000
@@ -67,8 +86,16 @@ const generateMonthlySalesData = () => {
   return monthlyData
 }
 
+// Custom tooltip component interface
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: string;
+  viewMode: "daily" | "monthly";
+}
+
 // Custom tooltip component
-const CustomTooltip = ({ active, payload, label, viewMode }: any) => {
+const CustomTooltip = ({ active, payload, label, viewMode }: CustomTooltipProps) => {
   if (!active || !payload || !payload.length) {
     return null
   }
@@ -113,7 +140,7 @@ const CustomTooltip = ({ active, payload, label, viewMode }: any) => {
 
 export default function DashboardPage() {
   const [viewMode, setViewMode] = useState<"daily" | "monthly">("daily")
-  const [salesData, setSalesData] = useState<any[]>([])
+  const [salesData, setSalesData] = useState<DailySalesData[] | MonthlySalesData[]>([])
   const [isLoading, setIsLoading] = useState(true)
 
   // Simulate data fetching
