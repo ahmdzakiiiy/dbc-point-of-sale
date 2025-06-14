@@ -232,7 +232,7 @@ export default function ReportsPage() {
     );
     yPos += 7;
     doc.text(
-      "Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182",
+      "Karsamenak, Kec. Tamansari, Kota. Tasikmalaya, Jawa Barat 46182",
       20,
       yPos
     );

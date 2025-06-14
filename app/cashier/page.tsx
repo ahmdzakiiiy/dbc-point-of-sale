@@ -1602,7 +1602,7 @@ export default function CashierPage() {
                   <h2 className="font-bold text-lg">DASTER BORDIR CANTIK</h2>
                   <p>
                     Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,
-                    Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182
+                    Karsamenak, Kec. Tamansari, Kota. Tasikmalaya, Jawa Barat 46182
                   </p>
                   <p>0821-1931-5212</p>
                 </div>
