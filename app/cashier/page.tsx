@@ -554,7 +554,7 @@ export default function CashierPage() {
       "Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,",
       y
     );
-    y = addCenteredText("Karsamenak, Kec. Kawalu, Kab. Tasikmalaya", y);
+    y = addCenteredText("Karsamenak, Kec. Tamansari, Kota. Tasikmalaya", y);
     y = addCenteredText("Telp: 0821-1931-5212", y);
     y += 3;
 
