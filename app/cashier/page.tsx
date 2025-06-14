@@ -1,13 +1,26 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Dialog,
   DialogContent,
@@ -15,12 +28,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Badge } from "@/components/ui/badge"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Search,
   ShoppingCart,
@@ -33,44 +46,80 @@ import {
   Eye,
   Calendar,
   Tag,
-} from "lucide-react"
-import DashboardNav from "@/components/dashboard-nav"
+} from "lucide-react";
+import DashboardNav from "@/components/dashboard-nav";
 
 // Sample product data
 const products = [
-  { id: 1, name: "Daster Anaya Pink", stock: 15, price: 120000, image: "/placeholder.svg" },
-  { id: 2, name: "Daster Busui Kuning", stock: 8, price: 135000, image: "/placeholder.svg" },
-  { id: 3, name: "Gamis Putih", stock: 3, price: 185000, image: "/placeholder.svg" },
-  { id: 4, name: "Dress Hitam", stock: 12, price: 150000, image: "/placeholder.svg" },
-  { id: 5, name: "Kemeja Navy", stock: 4, price: 110000, image: "/placeholder.svg" },
-  { id: 6, name: "Kaftan Coklat", stock: 7, price: 165000, image: "/placeholder.svg" },
-]
+  {
+    id: 1,
+    name: "Daster Anaya Pink",
+    stock: 15,
+    price: 120000,
+    image: "/placeholder.svg",
+  },
+  {
+    id: 2,
+    name: "Daster Busui Kuning",
+    stock: 8,
+    price: 135000,
+    image: "/placeholder.svg",
+  },
+  {
+    id: 3,
+    name: "Gamis Putih",
+    stock: 3,
+    price: 185000,
+    image: "/placeholder.svg",
+  },
+  {
+    id: 4,
+    name: "Dress Hitam",
+    stock: 12,
+    price: 150000,
+    image: "/placeholder.svg",
+  },
+  {
+    id: 5,
+    name: "Kemeja Navy",
+    stock: 4,
+    price: 110000,
+    image: "/placeholder.svg",
+  },
+  {
+    id: 6,
+    name: "Kaftan Coklat",
+    stock: 7,
+    price: 165000,
+    image: "/placeholder.svg",
+  },
+];
 
 type CartItem = {
-  id: number
-  name: string
-  price: number
-  quantity: number
-}
+  id: number;
+  name: string;
+  price: number;
+  quantity: number;
+};
 
 type Discount = {
-  type: "percentage" | "fixed"
-  value: number
-  amount: number
-}
+  type: "percentage" | "fixed";
+  value: number;
+  amount: number;
+};
 
 type Transaction = {
-  id: string
-  date: Date
-  items: CartItem[]
-  subtotal: number
-  discount?: Discount
-  total: number
-  cashReceived: number
-  change: number
-  cashier: string
-  status: "completed" | "refunded"
-}
+  id: string;
+  date: Date;
+  items: CartItem[];
+  subtotal: number;
+  discount?: Discount;
+  total: number;
+  cashReceived: number;
+  change: number;
+  cashier: string;
+  status: "completed" | "refunded";
+};
 
 // Sample transaction history
 const initialTransactions: Transaction[] = [
@@ -115,185 +164,235 @@ const initialTransactions: Transaction[] = [
     cashier: "Admin",
     status: "completed",
   },
-]
+];
 
 export default function CashierPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false)
-  const [receiptModalOpen, setReceiptModalOpen] = useState(false)
-  const [transactionDetailModalOpen, setTransactionDetailModalOpen] = useState(false)
-  const [cashAmount, setCashAmount] = useState("")
-  const [isProcessing, setIsProcessing] = useState(false)
-  const [lastTransaction, setLastTransaction] = useState<Transaction | null>(null)
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null)
-  const [transactions, setTransactions] = useState<Transaction[]>(initialTransactions)
-  const [transactionSearchTerm, setTransactionSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("products")
+  const [searchTerm, setSearchTerm] = useState("");
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [transactionDetailModalOpen, setTransactionDetailModalOpen] =
+    useState(false);
+  const [cashAmount, setCashAmount] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [lastTransaction, setLastTransaction] = useState<Transaction | null>(
+    null
+  );
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+  const [transactions, setTransactions] =
+    useState<Transaction[]>(initialTransactions);
+  const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("products");
 
   // Discount states
-  const [discountType, setDiscountType] = useState<"percentage" | "fixed">("percentage")
-  const [discountValue, setDiscountValue] = useState("")
-  const [discountApplied, setDiscountApplied] = useState(false)
+  const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
+    "percentage"
+  );
+  const [discountValue, setDiscountValue] = useState("");
+  const [discountApplied, setDiscountApplied] = useState(false);
 
   // Enhanced discount input handling
   const formatDiscountValue = (amount: number | string) => {
-    const numAmount = typeof amount === "string" ? Number.parseFloat(amount.replace(/\./g, "")) || 0 : amount
-    return numAmount.toLocaleString("id-ID")
-  }
+    const numAmount =
+      typeof amount === "string"
+        ? Number.parseFloat(amount.replace(/\./g, "")) || 0
+        : amount;
+    return numAmount.toLocaleString("id-ID");
+  };
 
   const handleDiscountValueChange = (value: string) => {
     if (discountType === "percentage") {
       // For percentage, allow decimal values but no formatting
-      const numericValue = value.replace(/[^\d.]/g, "")
+      const numericValue = value.replace(/[^\d.]/g, "");
       if (numericValue === "" || Number.parseFloat(numericValue) <= 100) {
-        setDiscountValue(numericValue)
+        setDiscountValue(numericValue);
       }
     } else {
       // For fixed amount, format with thousands separator
-      const numericValue = value.replace(/[^\d]/g, "")
+      const numericValue = value.replace(/[^\d]/g, "");
       if (numericValue === "") {
-        setDiscountValue("")
-        return
+        setDiscountValue("");
+        return;
       }
-      const numberValue = Number.parseInt(numericValue)
-      const maxValue = calculateSubtotal()
+      const numberValue = Number.parseInt(numericValue);
+      const maxValue = calculateSubtotal();
       if (numberValue <= maxValue) {
-        setDiscountValue(formatDiscountValue(numberValue))
+        setDiscountValue(formatDiscountValue(numberValue));
       }
     }
-  }
+  };
 
   const getDiscountNumericValue = (formattedValue: string) => {
     if (discountType === "percentage") {
-      return Number.parseFloat(formattedValue) || 0
+      return Number.parseFloat(formattedValue) || 0;
     }
-    return Number.parseInt(formattedValue.replace(/\./g, "")) || 0
-  }
+    return Number.parseInt(formattedValue.replace(/\./g, "")) || 0;
+  };
 
   const adjustDiscountValue = (increment: boolean) => {
-    const currentValue = getDiscountNumericValue(discountValue)
+    const currentValue = getDiscountNumericValue(discountValue);
 
     if (discountType === "percentage") {
-      const step = 1 // Increment by 1%
-      const newValue = increment ? Math.min(100, currentValue + step) : Math.max(0, currentValue - step)
-      setDiscountValue(newValue.toString())
+      const step = 1; // Increment by 1%
+      const newValue = increment
+        ? Math.min(100, currentValue + step)
+        : Math.max(0, currentValue - step);
+      setDiscountValue(newValue.toString());
     } else {
-      const step = 1000 // Increment by 1000 for fixed amount
-      const maxValue = calculateSubtotal()
-      const newValue = increment ? Math.min(maxValue, currentValue + step) : Math.max(0, currentValue - step)
-      setDiscountValue(formatDiscountValue(newValue))
+      const step = 1000; // Increment by 1000 for fixed amount
+      const maxValue = calculateSubtotal();
+      const newValue = increment
+        ? Math.min(maxValue, currentValue + step)
+        : Math.max(0, currentValue - step);
+      setDiscountValue(formatDiscountValue(newValue));
     }
-  }
+  };
 
   const handleDiscountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Prevent scrolling with arrow keys
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-      e.preventDefault()
-      adjustDiscountValue(e.key === "ArrowUp")
+      e.preventDefault();
+      adjustDiscountValue(e.key === "ArrowUp");
     }
 
     // Allow only numeric keys, decimal point (for percentage), backspace, delete, and arrow keys
-    const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"]
-    const isNumeric = /^[0-9]$/.test(e.key)
-    const isDecimal = e.key === "." && discountType === "percentage" && !discountValue.includes(".")
+    const allowedKeys = [
+      "Backspace",
+      "Delete",
+      "ArrowLeft",
+      "ArrowRight",
+      "Tab",
+    ];
+    const isNumeric = /^[0-9]$/.test(e.key);
+    const isDecimal =
+      e.key === "." &&
+      discountType === "percentage" &&
+      !discountValue.includes(".");
 
     if (!isNumeric && !isDecimal && !allowedKeys.includes(e.key)) {
-      e.preventDefault()
+      e.preventDefault();
     }
-  }
+  };
 
   // Prevent wheel/scroll events on discount input
   const handleDiscountWheel = (e: React.WheelEvent<HTMLInputElement>) => {
-    e.preventDefault()
-    e.currentTarget.blur() // Remove focus to prevent any scroll behavior
-  }
+    e.preventDefault();
+    e.currentTarget.blur(); // Remove focus to prevent any scroll behavior
+  };
 
   // Load transactions from localStorage on component mount
   useEffect(() => {
-    const savedTransactions = localStorage.getItem("pos_transactions")
+    const savedTransactions = localStorage.getItem("pos_transactions");
     if (savedTransactions) {
-      const parsedTransactions = JSON.parse(savedTransactions).map((t: any) => ({
-        ...t,
-        date: new Date(t.date),
-      }))
-      setTransactions(parsedTransactions)
+      const parsedTransactions = JSON.parse(savedTransactions).map(
+        (t: any) => ({
+          ...t,
+          date: new Date(t.date),
+        })
+      );
+      setTransactions(parsedTransactions);
     }
-  }, [])
+  }, []);
 
   // Save transactions to localStorage whenever transactions change
   useEffect(() => {
-    localStorage.setItem("pos_transactions", JSON.stringify(transactions))
-  }, [transactions])
+    localStorage.setItem("pos_transactions", JSON.stringify(transactions));
+  }, [transactions]);
 
-  const filteredProducts = products.filter((product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   // Filter transactions based on search term
   const filteredTransactions = transactions
     .filter(
       (transaction) =>
-        transaction.id.toLowerCase().includes(transactionSearchTerm.toLowerCase()) ||
-        transaction.items.some((item) => item.name.toLowerCase().includes(transactionSearchTerm.toLowerCase())) ||
-        transaction.cashier.toLowerCase().includes(transactionSearchTerm.toLowerCase()),
+        transaction.id
+          .toLowerCase()
+          .includes(transactionSearchTerm.toLowerCase()) ||
+        transaction.items.some((item) =>
+          item.name.toLowerCase().includes(transactionSearchTerm.toLowerCase())
+        ) ||
+        transaction.cashier
+          .toLowerCase()
+          .includes(transactionSearchTerm.toLowerCase())
     )
-    .sort((a, b) => b.date.getTime() - a.date.getTime()) // Sort by date, newest first
+    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date, newest first
 
   // Format number with thousands separator
   const formatCurrency = (amount: number | string) => {
-    const numAmount = typeof amount === "string" ? Number.parseFloat(amount.replace(/\./g, "")) || 0 : amount
-    return numAmount.toLocaleString("id-ID")
-  }
+    const numAmount =
+      typeof amount === "string"
+        ? Number.parseFloat(amount.replace(/\./g, "")) || 0
+        : amount;
+    return numAmount.toLocaleString("id-ID");
+  };
 
   // Handle cash amount input with formatting
   const handleCashAmountChange = (value: string) => {
     // Remove all non-numeric characters except decimal points
-    const numericValue = value.replace(/[^\d]/g, "")
+    const numericValue = value.replace(/[^\d]/g, "");
 
     if (numericValue === "") {
-      setCashAmount("")
-      return
+      setCashAmount("");
+      return;
     }
 
     // Convert to number and format with thousands separator
-    const numberValue = Number.parseInt(numericValue)
-    setCashAmount(formatCurrency(numberValue))
-  }
+    const numberValue = Number.parseInt(numericValue);
+    setCashAmount(formatCurrency(numberValue));
+  };
 
   // Get numeric value from formatted string
   const getNumericValue = (formattedValue: string) => {
-    return Number.parseInt(formattedValue.replace(/\./g, "")) || 0
-  }
+    return Number.parseInt(formattedValue.replace(/\./g, "")) || 0;
+  };
 
   // Handle increment/decrement for cash amount
   const adjustCashAmount = (increment: boolean) => {
-    const currentValue = getNumericValue(cashAmount)
-    const step = 1000 // Increment by 1000
-    const newValue = increment ? currentValue + step : Math.max(0, currentValue - step)
-    setCashAmount(formatCurrency(newValue))
-  }
+    const currentValue = getNumericValue(cashAmount);
+    const step = 1000; // Increment by 1000
+    const newValue = increment
+      ? currentValue + step
+      : Math.max(0, currentValue - step);
+    setCashAmount(formatCurrency(newValue));
+  };
 
   // Handle keyboard events for cash input
   const handleCashKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     // Prevent scrolling with arrow keys
     if (e.key === "ArrowUp" || e.key === "ArrowDown") {
-      e.preventDefault()
-      adjustCashAmount(e.key === "ArrowUp")
+      e.preventDefault();
+      adjustCashAmount(e.key === "ArrowUp");
     }
 
     // Allow only numeric keys, backspace, delete, and arrow keys
-    const allowedKeys = ["Backspace", "Delete", "ArrowLeft", "ArrowRight", "Tab"]
-    const isNumeric = /^[0-9]$/.test(e.key)
+    const allowedKeys = [
+      "Backspace",
+      "Delete",
+      "ArrowLeft",
+      "ArrowRight",
+      "Tab",
+    ];
+    const isNumeric = /^[0-9]$/.test(e.key);
 
     if (!isNumeric && !allowedKeys.includes(e.key)) {
-      e.preventDefault()
+      e.preventDefault();
     }
-  }
+  };
 
   const addToCart = (product: (typeof products)[0]) => {
-    const existingItem = cart.find((item) => item.id === product.id)
+    const existingItem = cart.find((item) => item.id === product.id);
 
     if (existingItem) {
-      setCart(cart.map((item) => (item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)))
+      setCart(
+        cart.map((item) =>
+          item.id === product.id
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      );
     } else {
       setCart([
         ...cart,
@@ -303,79 +402,81 @@ export default function CashierPage() {
           price: product.price,
           quantity: 1,
         },
-      ])
+      ]);
     }
-  }
+  };
 
   const updateQuantity = (id: number, quantity: number) => {
     if (quantity <= 0) {
-      setCart(cart.filter((item) => item.id !== id))
+      setCart(cart.filter((item) => item.id !== id));
     } else {
-      setCart(cart.map((item) => (item.id === id ? { ...item, quantity } : item)))
+      setCart(
+        cart.map((item) => (item.id === id ? { ...item, quantity } : item))
+      );
     }
-  }
+  };
 
   const calculateSubtotal = () => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0)
-  }
+    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  };
+  const calculateDiscount = (): Discount => {
+    if (!discountApplied || !discountValue)
+      return { type: discountType, value: 0, amount: 0 };
 
-  const calculateDiscount = () => {
-    if (!discountApplied || !discountValue) return { type: discountType, value: 0, amount: 0 }
-
-    const subtotal = calculateSubtotal()
-    const value = getDiscountNumericValue(discountValue)
+    const subtotal = calculateSubtotal();
+    const value = getDiscountNumericValue(discountValue);
 
     if (discountType === "percentage") {
-      const amount = Math.round((subtotal * value) / 100)
-      return { type: "percentage", value, amount }
+      const amount = Math.round((subtotal * value) / 100);
+      return { type: "percentage", value, amount };
     } else {
-      const amount = Math.min(value, subtotal) // Don't allow discount greater than subtotal
-      return { type: "fixed", value, amount }
+      const amount = Math.min(value, subtotal); // Don't allow discount greater than subtotal
+      return { type: "fixed", value, amount };
     }
-  }
+  };
 
   const calculateTotal = () => {
-    const subtotal = calculateSubtotal()
-    const discount = calculateDiscount()
-    return Math.max(0, subtotal - discount.amount)
-  }
+    const subtotal = calculateSubtotal();
+    const discount = calculateDiscount();
+    return Math.max(0, subtotal - discount.amount);
+  };
 
   const calculateItemSubtotal = (item: CartItem) => {
-    return item.price * item.quantity
-  }
+    return item.price * item.quantity;
+  };
 
   const generateTransactionId = () => {
-    const timestamp = Date.now().toString().slice(-6)
-    return `TRX-${timestamp}`
-  }
+    const timestamp = Date.now().toString().slice(-6);
+    return `TRX-${timestamp}`;
+  };
 
   const applyDiscount = () => {
     if (discountValue && getDiscountNumericValue(discountValue) > 0) {
-      setDiscountApplied(true)
+      setDiscountApplied(true);
     }
-  }
+  };
 
   const removeDiscount = () => {
-    setDiscountApplied(false)
-    setDiscountValue("")
-  }
+    setDiscountApplied(false);
+    setDiscountValue("");
+  };
 
   const resetPaymentForm = () => {
-    setCashAmount("")
-    setDiscountType("percentage")
-    setDiscountValue("")
-    setDiscountApplied(false)
-  }
+    setCashAmount("");
+    setDiscountType("percentage");
+    setDiscountValue("");
+    setDiscountApplied(false);
+  };
 
   const handlePayment = async () => {
-    setIsProcessing(true)
+    setIsProcessing(true);
 
     // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
-    const subtotal = calculateSubtotal()
-    const discount = discountApplied ? calculateDiscount() : undefined
-    const total = calculateTotal()
+    const subtotal = calculateSubtotal();
+    const discount = discountApplied ? calculateDiscount() : undefined;
+    const total = calculateTotal();
 
     // Create transaction data
     const transactionData: Transaction = {
@@ -389,35 +490,35 @@ export default function CashierPage() {
       change: getNumericValue(cashAmount) - total,
       cashier: localStorage.getItem("username") || "Admin",
       status: "completed",
-    }
+    };
 
     // Add to transactions list
-    setTransactions((prev) => [transactionData, ...prev])
-    setLastTransaction(transactionData)
+    setTransactions((prev) => [transactionData, ...prev]);
+    setLastTransaction(transactionData);
 
     // Reset form
-    setCart([])
-    setPaymentModalOpen(false)
-    resetPaymentForm()
-    setIsProcessing(false)
+    setCart([]);
+    setPaymentModalOpen(false);
+    resetPaymentForm();
+    setIsProcessing(false);
 
     // Show receipt
-    setReceiptModalOpen(true)
-  }
+    setReceiptModalOpen(true);
+  };
 
   const viewTransactionDetail = (transaction: Transaction) => {
-    setSelectedTransaction(transaction)
-    setTransactionDetailModalOpen(true)
-  }
+    setSelectedTransaction(transaction);
+    setTransactionDetailModalOpen(true);
+  };
 
   const reprintReceipt = (transaction: Transaction) => {
-    setLastTransaction(transaction)
-    setReceiptModalOpen(true)
-  }
+    setLastTransaction(transaction);
+    setReceiptModalOpen(true);
+  };
 
   const downloadReceipt = (transaction?: Transaction) => {
-    const receiptTransaction = transaction || lastTransaction
-    if (!receiptTransaction) return
+    const receiptTransaction = transaction || lastTransaction;
+    if (!receiptTransaction) return;
 
     const receiptContent = `
 DASTER BORDIR CANTIK
@@ -439,9 +540,9 @@ DETAIL PEMBELIAN:
 ${receiptTransaction.items
   .map(
     (item: CartItem) =>
-      `${item.name}\n${item.quantity} x Rp ${item.price.toLocaleString("id-ID")} = Rp ${(
-        item.price * item.quantity
-      ).toLocaleString("id-ID")}`,
+      `${item.name}\n${item.quantity} x Rp ${item.price.toLocaleString(
+        "id-ID"
+      )} = Rp ${(item.price * item.quantity).toLocaleString("id-ID")}`
   )
   .join("\n\n")}
 
@@ -451,7 +552,9 @@ SUBTOTAL: Rp ${receiptTransaction.subtotal.toLocaleString("id-ID")}${
         ? `\nDISKON (${
             receiptTransaction.discount.type === "percentage"
               ? `${receiptTransaction.discount.value}%`
-              : `Rp ${receiptTransaction.discount.value.toLocaleString("id-ID")}`
+              : `Rp ${receiptTransaction.discount.value.toLocaleString(
+                  "id-ID"
+                )}`
           }): -Rp ${receiptTransaction.discount.amount.toLocaleString("id-ID")}`
         : ""
     }
@@ -464,18 +567,18 @@ Terima kasih atas kunjungan Anda!
 Barang yang sudah dibeli tidak dapat dikembalikan.
 
 ================================
-    `
+    `;
 
-    const blob = new Blob([receiptContent], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `receipt-${receiptTransaction.id}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
+    const blob = new Blob([receiptContent], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `receipt-${receiptTransaction.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const formatDateTime = (date: Date) => {
     return date.toLocaleDateString("id-ID", {
@@ -484,10 +587,10 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    })
-  }
+    });
+  };
 
-  const transactionId = generateTransactionId()
+  const transactionId = generateTransactionId();
   const currentDate = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
@@ -495,7 +598,7 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
     day: "numeric",
     hour: "2-digit",
     minute: "2-digit",
-  })
+  });
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -535,12 +638,18 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 {/* Vertical 3-column grid layout */}
                 <div className="grid grid-cols-3 gap-3">
                   {filteredProducts.map((product) => (
-                    <Card key={product.id} className="overflow-hidden flex flex-col h-full">
+                    <Card
+                      key={product.id}
+                      className="overflow-hidden flex flex-col h-full"
+                    >
                       {/* Product Image */}
                       <CardHeader className="p-0">
                         <div className="aspect-square w-full overflow-hidden bg-gray-100">
                           <Image
-                            src={product.image || "/placeholder.svg?height=150&width=150"}
+                            src={
+                              product.image ||
+                              "/placeholder.svg?height=150&width=150"
+                            }
                             alt={product.name}
                             width={150}
                             height={150}
@@ -559,14 +668,22 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                           {/* Stock Information with Visual Indicator */}
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">Stok:</span>
+                              <span className="text-xs text-muted-foreground">
+                                Stok:
+                              </span>
                               <span
-                                className={`text-xs font-medium ${product.stock < 5 ? "text-red-500" : "text-gray-700"}`}
+                                className={`text-xs font-medium ${
+                                  product.stock < 5
+                                    ? "text-red-500"
+                                    : "text-gray-700"
+                                }`}
                               >
                                 {product.stock}
                               </span>
                             </div>
-                            {product.stock < 5 && <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />}
+                            {product.stock < 5 && (
+                              <AlertTriangle className="h-3 w-3 text-red-500 flex-shrink-0" />
+                            )}
                           </div>
 
                           <p className="font-semibold text-sm text-violet-600 mb-3">
@@ -590,7 +707,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
 
                   {filteredProducts.length === 0 && (
                     <div className="col-span-3 text-center py-8 text-muted-foreground">
-                      {searchTerm ? "Tidak ada produk yang ditemukan" : "Tidak ada produk tersedia"}
+                      {searchTerm
+                        ? "Tidak ada produk yang ditemukan"
+                        : "Tidak ada produk tersedia"}
                     </div>
                   )}
                 </div>
@@ -606,7 +725,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 </CardHeader>
                 <CardContent>
                   {cart.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">Belum ada produk ditambahkan</div>
+                    <div className="text-center py-8 text-muted-foreground">
+                      Belum ada produk ditambahkan
+                    </div>
                   ) : (
                     <Table>
                       <TableHeader>
@@ -627,7 +748,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                                   variant="outline"
                                   size="sm"
                                   className="h-6 w-6 p-0"
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() =>
+                                    updateQuantity(item.id, item.quantity - 1)
+                                  }
                                 >
                                   -
                                 </Button>
@@ -636,15 +759,22 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                                   variant="outline"
                                   size="sm"
                                   className="h-6 w-6 p-0"
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() =>
+                                    updateQuantity(item.id, item.quantity + 1)
+                                  }
                                 >
                                   +
                                 </Button>
                               </div>
                             </TableCell>
-                            <TableCell>Rp {item.price.toLocaleString("id-ID")}</TableCell>
+                            <TableCell>
+                              Rp {item.price.toLocaleString("id-ID")}
+                            </TableCell>
                             <TableCell className="text-right">
-                              Rp {calculateItemSubtotal(item).toLocaleString("id-ID")}
+                              Rp{" "}
+                              {calculateItemSubtotal(item).toLocaleString(
+                                "id-ID"
+                              )}
                             </TableCell>
                           </TableRow>
                         ))}
@@ -655,7 +785,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                   <div className="mt-6 space-y-2">
                     <div className="flex justify-between font-medium">
                       <span>Total</span>
-                      <span>Rp {calculateSubtotal().toLocaleString("id-ID")}</span>
+                      <span>
+                        Rp {calculateSubtotal().toLocaleString("id-ID")}
+                      </span>
                     </div>
                   </div>
                 </CardContent>
@@ -695,22 +827,40 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
               <CardContent>
                 {filteredTransactions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
-                    {transactionSearchTerm ? "Tidak ada transaksi yang ditemukan" : "Belum ada transaksi"}
+                    {transactionSearchTerm
+                      ? "Tidak ada transaksi yang ditemukan"
+                      : "Belum ada transaksi"}
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {filteredTransactions.map((transaction) => (
-                      <Card key={transaction.id} className="border-l-4 border-l-violet-500">
+                      <Card
+                        key={transaction.id}
+                        className="border-l-4 border-l-violet-500"
+                      >
                         <CardContent className="p-4">
                           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold text-lg">{transaction.id}</h3>
-                                <Badge variant={transaction.status === "completed" ? "default" : "destructive"}>
-                                  {transaction.status === "completed" ? "Selesai" : "Dikembalikan"}
+                                <h3 className="font-semibold text-lg">
+                                  {transaction.id}
+                                </h3>
+                                <Badge
+                                  variant={
+                                    transaction.status === "completed"
+                                      ? "default"
+                                      : "destructive"
+                                  }
+                                >
+                                  {transaction.status === "completed"
+                                    ? "Selesai"
+                                    : "Dikembalikan"}
                                 </Badge>
                                 {transaction.discount && (
-                                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                                  <Badge
+                                    variant="secondary"
+                                    className="bg-green-100 text-green-800"
+                                  >
                                     <Tag className="h-3 w-3 mr-1" />
                                     Diskon
                                   </Badge>
@@ -725,9 +875,16 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                                 <div>{transaction.items.length} item(s)</div>
                               </div>
                               <div className="mt-2">
-                                <span className="text-sm text-muted-foreground">Items: </span>
+                                <span className="text-sm text-muted-foreground">
+                                  Items:{" "}
+                                </span>
                                 <span className="text-sm">
-                                  {transaction.items.map((item) => `${item.name} (${item.quantity}x)`).join(", ")}
+                                  {transaction.items
+                                    .map(
+                                      (item) =>
+                                        `${item.name} (${item.quantity}x)`
+                                    )
+                                    .join(", ")}
                                 </span>
                               </div>
                               {transaction.discount && (
@@ -735,8 +892,13 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                                   Diskon{" "}
                                   {transaction.discount.type === "percentage"
                                     ? `${transaction.discount.value}%`
-                                    : `Rp ${transaction.discount.value.toLocaleString("id-ID")}`}
-                                  : -Rp {transaction.discount.amount.toLocaleString("id-ID")}
+                                    : `Rp ${transaction.discount.value.toLocaleString(
+                                        "id-ID"
+                                      )}`}
+                                  : -Rp{" "}
+                                  {transaction.discount.amount.toLocaleString(
+                                    "id-ID"
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -746,15 +908,26 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                                   Rp {transaction.total.toLocaleString("id-ID")}
                                 </div>
                                 <div className="text-sm text-muted-foreground">
-                                  Kembalian: Rp {transaction.change.toLocaleString("id-ID")}
+                                  Kembalian: Rp{" "}
+                                  {transaction.change.toLocaleString("id-ID")}
                                 </div>
                               </div>
                               <div className="flex gap-2">
-                                <Button variant="outline" size="sm" onClick={() => viewTransactionDetail(transaction)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    viewTransactionDetail(transaction)
+                                  }
+                                >
                                   <Eye className="h-4 w-4 mr-1" />
                                   Detail
                                 </Button>
-                                <Button variant="outline" size="sm" onClick={() => reprintReceipt(transaction)}>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => reprintReceipt(transaction)}
+                                >
                                   <Receipt className="h-4 w-4 mr-1" />
                                   Cetak
                                 </Button>
@@ -780,7 +953,8 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 Konfirmasi Pembayaran
               </DialogTitle>
               <DialogDescription>
-                ID Transaksi: <span className="font-mono font-medium">{transactionId}</span>
+                ID Transaksi:{" "}
+                <span className="font-mono font-medium">{transactionId}</span>
               </DialogDescription>
             </DialogHeader>
 
@@ -788,7 +962,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
               {/* Transaction Details */}
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Tanggal & Waktu:</span>
+                  <span className="text-muted-foreground">
+                    Tanggal & Waktu:
+                  </span>
                   <span className="font-medium">{currentDate}</span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -804,14 +980,20 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 <h3 className="font-semibold">Detail Produk</h3>
                 <div className="space-y-3">
                   {cart.map((item) => (
-                    <div key={item.id} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
+                    <div
+                      key={item.id}
+                      className="flex justify-between items-start p-3 bg-gray-50 rounded-lg"
+                    >
                       <div className="flex-1">
                         <div className="font-medium">{item.name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                          {item.quantity} x Rp{" "}
+                          {item.price.toLocaleString("id-ID")}
                         </div>
                       </div>
-                      <div className="font-medium">Rp {calculateItemSubtotal(item).toLocaleString("id-ID")}</div>
+                      <div className="font-medium">
+                        Rp {calculateItemSubtotal(item).toLocaleString("id-ID")}
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -827,7 +1009,11 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                     Diskon
                   </h3>
                   {discountApplied && (
-                    <Button variant="outline" size="sm" onClick={removeDiscount}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={removeDiscount}
+                    >
                       Hapus Diskon
                     </Button>
                   )}
@@ -840,8 +1026,8 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                       <RadioGroup
                         value={discountType}
                         onValueChange={(value: "percentage" | "fixed") => {
-                          setDiscountType(value)
-                          setDiscountValue("") // Reset value when changing type
+                          setDiscountType(value);
+                          setDiscountValue(""); // Reset value when changing type
                         }}
                       >
                         <div className="flex items-center space-x-2">
@@ -857,7 +1043,8 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
 
                     <div className="space-y-2">
                       <Label htmlFor="discount-value">
-                        Nilai Diskon {discountType === "percentage" ? "(%)" : "(Rp)"}
+                        Nilai Diskon{" "}
+                        {discountType === "percentage" ? "(%)" : "(Rp)"}
                       </Label>
                       <div className="flex gap-2">
                         <div className="relative flex-1">
@@ -869,18 +1056,30 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                           <Input
                             id="discount-value"
                             type="text"
-                            placeholder={discountType === "percentage" ? "Contoh: 10" : "Contoh: 25.000"}
+                            placeholder={
+                              discountType === "percentage"
+                                ? "Contoh: 10"
+                                : "Contoh: 25.000"
+                            }
                             value={discountValue}
-                            onChange={(e) => handleDiscountValueChange(e.target.value)}
+                            onChange={(e) =>
+                              handleDiscountValueChange(e.target.value)
+                            }
                             onKeyDown={handleDiscountKeyDown}
                             onWheel={handleDiscountWheel}
-                            className={`${discountType === "fixed" ? "pl-10 pr-16" : "pr-16"}`}
+                            className={`${
+                              discountType === "fixed" ? "pl-10 pr-16" : "pr-16"
+                            }`}
                             style={{
                               MozAppearance: "textfield",
                               WebkitAppearance: "none",
                             }}
                             min="0"
-                            max={discountType === "percentage" ? "100" : calculateSubtotal().toString()}
+                            max={
+                              discountType === "percentage"
+                                ? "100"
+                                : calculateSubtotal().toString()
+                            }
                           />
                           <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col">
                             <Button
@@ -910,7 +1109,10 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                         </div>
                         <Button
                           onClick={applyDiscount}
-                          disabled={!discountValue || getDiscountNumericValue(discountValue) <= 0}
+                          disabled={
+                            !discountValue ||
+                            getDiscountNumericValue(discountValue) <= 0
+                          }
                         >
                           Terapkan
                         </Button>
@@ -924,7 +1126,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                         <span>
                           {discountType === "percentage"
                             ? "Maksimal 100%"
-                            : `Maksimal Rp ${calculateSubtotal().toLocaleString("id-ID")}`}
+                            : `Maksimal Rp ${calculateSubtotal().toLocaleString(
+                                "id-ID"
+                              )}`}
                         </span>
                       </div>
                     </div>
@@ -934,10 +1138,14 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium text-green-800">
-                          Diskon {discountType === "percentage" ? `${discountValue}%` : `Rp ${discountValue}`}
+                          Diskon{" "}
+                          {discountType === "percentage"
+                            ? `${discountValue}%`
+                            : `Rp ${discountValue}`}
                         </div>
                         <div className="text-sm text-green-600">
-                          Hemat: Rp {calculateDiscount().amount.toLocaleString("id-ID")}
+                          Hemat: Rp{" "}
+                          {calculateDiscount().amount.toLocaleString("id-ID")}
                         </div>
                       </div>
                       <Tag className="h-5 w-5 text-green-600" />
@@ -951,7 +1159,10 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
               {/* Payment Summary */}
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} item)</span>
+                  <span>
+                    Subtotal (
+                    {cart.reduce((sum, item) => sum + item.quantity, 0)} item)
+                  </span>
                   <span>Rp {calculateSubtotal().toLocaleString("id-ID")}</span>
                 </div>
                 {discountApplied && (
@@ -960,9 +1171,13 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                       Diskon{" "}
                       {discountType === "percentage"
                         ? `(${discountValue}%)`
-                        : `(Rp ${Number.parseFloat(discountValue).toLocaleString("id-ID")})`}
+                        : `(Rp ${Number.parseFloat(
+                            discountValue
+                          ).toLocaleString("id-ID")})`}
                     </span>
-                    <span>-Rp {calculateDiscount().amount.toLocaleString("id-ID")}</span>
+                    <span>
+                      -Rp {calculateDiscount().amount.toLocaleString("id-ID")}
+                    </span>
                   </div>
                 )}
                 <div className="flex justify-between font-bold text-lg">
@@ -1017,26 +1232,36 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                     </div>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Gunakan tombol ↑↓ atau klik panah untuk menambah/mengurangi Rp 1.000
+                    Gunakan tombol ↑↓ atau klik panah untuk menambah/mengurangi
+                    Rp 1.000
                   </p>
                 </div>
 
-                {cashAmount && getNumericValue(cashAmount) >= calculateTotal() && (
-                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <span className="font-medium text-green-700">Kembalian:</span>
-                      <span className="text-xl font-bold text-green-800">
-                        Rp {(getNumericValue(cashAmount) - calculateTotal()).toLocaleString("id-ID")}
-                      </span>
+                {cashAmount &&
+                  getNumericValue(cashAmount) >= calculateTotal() && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-green-700">
+                          Kembalian:
+                        </span>
+                        <span className="text-xl font-bold text-green-800">
+                          Rp{" "}
+                          {(
+                            getNumericValue(cashAmount) - calculateTotal()
+                          ).toLocaleString("id-ID")}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
 
-                {cashAmount && getNumericValue(cashAmount) < calculateTotal() && (
-                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="text-red-700 text-sm">Uang yang diterima kurang dari total pembayaran</div>
-                  </div>
-                )}
+                {cashAmount &&
+                  getNumericValue(cashAmount) < calculateTotal() && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="text-red-700 text-sm">
+                        Uang yang diterima kurang dari total pembayaran
+                      </div>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -1044,7 +1269,11 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
               <Button
                 onClick={handlePayment}
                 className="bg-violet-500 hover:bg-violet-600"
-                disabled={!cashAmount || getNumericValue(cashAmount) < calculateTotal() || isProcessing}
+                disabled={
+                  !cashAmount ||
+                  getNumericValue(cashAmount) < calculateTotal() ||
+                  isProcessing
+                }
               >
                 {isProcessing ? "Memproses..." : "Konfirmasi Pembayaran"}
               </Button>
@@ -1053,7 +1282,10 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
         </Dialog>
 
         {/* Transaction Detail Modal */}
-        <Dialog open={transactionDetailModalOpen} onOpenChange={setTransactionDetailModalOpen}>
+        <Dialog
+          open={transactionDetailModalOpen}
+          onOpenChange={setTransactionDetailModalOpen}
+        >
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
@@ -1061,7 +1293,10 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 Detail Transaksi
               </DialogTitle>
               <DialogDescription>
-                ID Transaksi: <span className="font-mono font-medium">{selectedTransaction?.id}</span>
+                ID Transaksi:{" "}
+                <span className="font-mono font-medium">
+                  {selectedTransaction?.id}
+                </span>
               </DialogDescription>
             </DialogHeader>
 
@@ -1070,24 +1305,40 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 {/* Transaction Info */}
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Tanggal & Waktu:</span>
-                    <div className="font-medium">{formatDateTime(selectedTransaction.date)}</div>
+                    <span className="text-muted-foreground">
+                      Tanggal & Waktu:
+                    </span>
+                    <div className="font-medium">
+                      {formatDateTime(selectedTransaction.date)}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Kasir:</span>
-                    <div className="font-medium">{selectedTransaction.cashier}</div>
+                    <div className="font-medium">
+                      {selectedTransaction.cashier}
+                    </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Status:</span>
                     <div>
-                      <Badge variant={selectedTransaction.status === "completed" ? "default" : "destructive"}>
-                        {selectedTransaction.status === "completed" ? "Selesai" : "Dikembalikan"}
+                      <Badge
+                        variant={
+                          selectedTransaction.status === "completed"
+                            ? "default"
+                            : "destructive"
+                        }
+                      >
+                        {selectedTransaction.status === "completed"
+                          ? "Selesai"
+                          : "Dikembalikan"}
                       </Badge>
                     </div>
                   </div>
                   <div>
                     <span className="text-muted-foreground">Total Item:</span>
-                    <div className="font-medium">{selectedTransaction.items.length} item(s)</div>
+                    <div className="font-medium">
+                      {selectedTransaction.items.length} item(s)
+                    </div>
                   </div>
                 </div>
 
@@ -1108,11 +1359,20 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                     <TableBody>
                       {selectedTransaction.items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell className="font-medium">{item.name}</TableCell>
-                          <TableCell className="text-center">{item.quantity}</TableCell>
-                          <TableCell className="text-right">Rp {item.price.toLocaleString("id-ID")}</TableCell>
+                          <TableCell className="font-medium">
+                            {item.name}
+                          </TableCell>
+                          <TableCell className="text-center">
+                            {item.quantity}
+                          </TableCell>
                           <TableCell className="text-right">
-                            Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                            Rp {item.price.toLocaleString("id-ID")}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            Rp{" "}
+                            {(item.price * item.quantity).toLocaleString(
+                              "id-ID"
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1126,7 +1386,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span>Subtotal:</span>
-                    <span>Rp {selectedTransaction.subtotal.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp {selectedTransaction.subtotal.toLocaleString("id-ID")}
+                    </span>
                   </div>
                   {selectedTransaction.discount && (
                     <div className="flex justify-between text-green-600">
@@ -1134,35 +1396,56 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                         Diskon{" "}
                         {selectedTransaction.discount.type === "percentage"
                           ? `(${selectedTransaction.discount.value}%)`
-                          : `(Rp ${selectedTransaction.discount.value.toLocaleString("id-ID")})`}
+                          : `(Rp ${selectedTransaction.discount.value.toLocaleString(
+                              "id-ID"
+                            )})`}
                         :
                       </span>
-                      <span>-Rp {selectedTransaction.discount.amount.toLocaleString("id-ID")}</span>
+                      <span>
+                        -Rp{" "}
+                        {selectedTransaction.discount.amount.toLocaleString(
+                          "id-ID"
+                        )}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg">
                     <span className="font-semibold">Total Pembayaran:</span>
-                    <span className="font-bold">Rp {selectedTransaction.total.toLocaleString("id-ID")}</span>
+                    <span className="font-bold">
+                      Rp {selectedTransaction.total.toLocaleString("id-ID")}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Uang Diterima:</span>
-                    <span>Rp {selectedTransaction.cashReceived.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp{" "}
+                      {selectedTransaction.cashReceived.toLocaleString("id-ID")}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Kembalian:</span>
-                    <span>Rp {selectedTransaction.change.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp {selectedTransaction.change.toLocaleString("id-ID")}
+                    </span>
                   </div>
                 </div>
               </div>
             )}
 
             <DialogFooter>
-              <Button onClick={() => selectedTransaction && downloadReceipt(selectedTransaction)} variant="outline">
+              <Button
+                onClick={() =>
+                  selectedTransaction && downloadReceipt(selectedTransaction)
+                }
+                variant="outline"
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download Struk
               </Button>
               <Button
-                onClick={() => selectedTransaction && reprintReceipt(selectedTransaction)}
+                onClick={() =>
+                  selectedTransaction && reprintReceipt(selectedTransaction)
+                }
                 className="bg-violet-500 hover:bg-violet-600"
               >
                 <Receipt className="mr-2 h-4 w-4" />
@@ -1176,7 +1459,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
         <Dialog open={receiptModalOpen} onOpenChange={setReceiptModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-center">Struk Pembayaran</DialogTitle>
+              <DialogTitle className="text-center">
+                Struk Pembayaran
+              </DialogTitle>
             </DialogHeader>
 
             {lastTransaction && (
@@ -1184,8 +1469,8 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 <div className="text-center border-b pb-4">
                   <h2 className="font-bold text-lg">DASTER BORDIR CANTIK</h2>
                   <p>
-                    Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8, Karsamenak, Kec. Kawalu, Kab. Tasikmalaya,
-                    Jawa Barat 46182
+                    Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,
+                    Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182
                   </p>
                   <p>0821-1931-5212</p>
                 </div>
@@ -1197,11 +1482,15 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                   </div>
                   <div className="flex justify-between">
                     <span>Tanggal:</span>
-                    <span>{lastTransaction.date.toLocaleDateString("id-ID")}</span>
+                    <span>
+                      {lastTransaction.date.toLocaleDateString("id-ID")}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Waktu:</span>
-                    <span>{lastTransaction.date.toLocaleTimeString("id-ID")}</span>
+                    <span>
+                      {lastTransaction.date.toLocaleTimeString("id-ID")}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Kasir:</span>
@@ -1217,9 +1506,13 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                       <div className="font-medium">{item.name}</div>
                       <div className="flex justify-between text-xs text-muted-foreground">
                         <span>
-                          {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
+                          {item.quantity} x Rp{" "}
+                          {item.price.toLocaleString("id-ID")}
                         </span>
-                        <span>Rp {(item.price * item.quantity).toLocaleString("id-ID")}</span>
+                        <span>
+                          Rp{" "}
+                          {(item.price * item.quantity).toLocaleString("id-ID")}
+                        </span>
                       </div>
                     </div>
                   ))}
@@ -1230,7 +1523,9 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>SUBTOTAL:</span>
-                    <span>Rp {lastTransaction.subtotal.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp {lastTransaction.subtotal.toLocaleString("id-ID")}
+                    </span>
                   </div>
                   {lastTransaction.discount && (
                     <div className="flex justify-between text-green-600">
@@ -1238,23 +1533,36 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                         DISKON{" "}
                         {lastTransaction.discount.type === "percentage"
                           ? `(${lastTransaction.discount.value}%)`
-                          : `(Rp ${lastTransaction.discount.value.toLocaleString("id-ID")})`}
+                          : `(Rp ${lastTransaction.discount.value.toLocaleString(
+                              "id-ID"
+                            )})`}
                         :
                       </span>
-                      <span>-Rp {lastTransaction.discount.amount.toLocaleString("id-ID")}</span>
+                      <span>
+                        -Rp{" "}
+                        {lastTransaction.discount.amount.toLocaleString(
+                          "id-ID"
+                        )}
+                      </span>
                     </div>
                   )}
                   <div className="flex justify-between font-bold">
                     <span>TOTAL:</span>
-                    <span>Rp {lastTransaction.total.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp {lastTransaction.total.toLocaleString("id-ID")}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>TUNAI:</span>
-                    <span>Rp {lastTransaction.cashReceived.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp {lastTransaction.cashReceived.toLocaleString("id-ID")}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span>KEMBALI:</span>
-                    <span>Rp {lastTransaction.change.toLocaleString("id-ID")}</span>
+                    <span>
+                      Rp {lastTransaction.change.toLocaleString("id-ID")}
+                    </span>
                   </div>
                 </div>
 
@@ -1266,7 +1574,11 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
             )}
 
             <DialogFooter>
-              <Button onClick={() => downloadReceipt()} variant="outline" className="w-full">
+              <Button
+                onClick={() => downloadReceipt()}
+                variant="outline"
+                className="w-full"
+              >
                 <Download className="mr-2 h-4 w-4" />
                 Download Struk
               </Button>
@@ -1275,5 +1587,5 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
         </Dialog>
       </main>
     </div>
-  )
+  );
 }
