@@ -295,14 +295,19 @@ export default function StockPage() {
                 <div className="text-2xl font-bold">{currentProduct?.stock}</div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="add-stock-quantity">Jumlah Stok yang Ditambahkan</Label>
-                <Input
+                <Label htmlFor="add-stock-quantity">Jumlah Stok yang Ditambahkan</Label>                <Input
                   id="add-stock-quantity"
                   type="number"
                   min="1"
                   placeholder="Masukkan jumlah stok"
                   value={addStockQuantity}
-                  onChange={(e) => setAddStockQuantity(e.target.value)}
+                  onChange={(e) => {
+                    // Only allow positive numbers
+                    const value = e.target.value;
+                    if (value === '' || parseInt(value) > 0) {
+                      setAddStockQuantity(value);
+                    }
+                  }}
                 />
               </div>
               {addStockQuantity && Number.parseInt(addStockQuantity) > 0 && (
