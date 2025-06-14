@@ -557,7 +557,7 @@ export default function ReportsPage() {
                     <p className="font-semibold">Daster Bordir Cantik</p>
                     <p>
                       Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,
-                      Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat
+                      Karsamenak, Kec. Tamansari, Kota. Tasikmalaya, Jawa Barat
                       46182
                     </p>
                     <p>Telepon: 0821-1931-5212</p>
