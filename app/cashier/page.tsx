@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
@@ -515,69 +516,200 @@ export default function CashierPage() {
     setLastTransaction(transaction);
     setReceiptModalOpen(true);
   };
-
   const downloadReceipt = (transaction?: Transaction) => {
     const receiptTransaction = transaction || lastTransaction;
     if (!receiptTransaction) return;
 
-    const receiptContent = `
-DASTER BORDIR CANTIK
-Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8, Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182
-Telp: 0821-1931-5212
+    // Create PDF document in receipt/thermal printer format (narrower than A4)
+    const doc = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: [80, 200], // Width: 80mm (typical receipt width)
+    });
 
-================================
-STRUK PEMBAYARAN
-================================
+    // Initial y position for content
+    let y = 10;
+    const margin = 5;
+    const width = 70; // Content width
 
-ID Transaksi: ${receiptTransaction.id}
-Tanggal: ${receiptTransaction.date.toLocaleDateString("id-ID")}
-Waktu: ${receiptTransaction.date.toLocaleTimeString("id-ID")}
-Kasir: ${receiptTransaction.cashier}
+    // Set font
+    doc.setFont("helvetica");
+    doc.setFontSize(10);
 
---------------------------------
-DETAIL PEMBELIAN:
---------------------------------
-${receiptTransaction.items
-  .map(
-    (item: CartItem) =>
-      `${item.name}\n${item.quantity} x Rp ${item.price.toLocaleString(
+    // Store original textAlign
+    const textAlign = doc.getTextWidth("M");
+
+    // Helper function to add text centered
+    const addCenteredText = (text: string, y: number) => {
+      doc.text(text, 40, y, { align: "center" });
+      return y + 5;
+    };
+
+    // Add header
+    y = addCenteredText("DASTER BORDIR CANTIK", y);
+
+    // Set smaller font for address
+    doc.setFontSize(7);
+    y = addCenteredText(
+      "Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,",
+      y
+    );
+    y = addCenteredText("Karsamenak, Kec. Kawalu, Kab. Tasikmalaya", y);
+    y = addCenteredText("Telp: 0821-1931-5212", y);
+    y += 3;
+
+    // Add separator
+    doc.line(margin, y, 80 - margin, y);
+    y += 5;
+
+    // Restore font size for title
+    doc.setFontSize(9);
+    y = addCenteredText("STRUK PEMBAYARAN", y);
+    y += 2;
+
+    // Add separator
+    doc.line(margin, y, 80 - margin, y);
+    y += 5;
+
+    // Transaction details
+    doc.setFontSize(8);
+    doc.text(`ID Transaksi: ${receiptTransaction.id}`, margin, y);
+    y += 4;
+    doc.text(
+      `Tanggal: ${receiptTransaction.date.toLocaleDateString("id-ID")}`,
+      margin,
+      y
+    );
+    y += 4;
+    doc.text(
+      `Waktu: ${receiptTransaction.date.toLocaleTimeString("id-ID")}`,
+      margin,
+      y
+    );
+    y += 4;
+    doc.text(`Kasir: ${receiptTransaction.cashier}`, margin, y);
+    y += 6;
+
+    // Add separator for items
+    doc.setFontSize(7);
+    doc.text("DETAIL PEMBELIAN:", margin, y);
+    y += 2;
+    doc.line(margin, y, 80 - margin, y);
+    y += 4;
+
+    // Items
+    receiptTransaction.items.forEach((item: CartItem) => {
+      // Check if we need more space
+      if (y > 180) {
+        doc.addPage([80, 200]);
+        y = 10;
+      }
+
+      doc.setFontSize(8);
+      doc.text(item.name, margin, y);
+      y += 4;
+
+      doc.setFontSize(7);
+      const qtyText = `${item.quantity} x Rp ${item.price.toLocaleString(
         "id-ID"
-      )} = Rp ${(item.price * item.quantity).toLocaleString("id-ID")}`
-  )
-  .join("\n\n")}
+      )}`;
+      doc.text(qtyText, margin + 2, y);
 
---------------------------------
-SUBTOTAL: Rp ${receiptTransaction.subtotal.toLocaleString("id-ID")}${
-      receiptTransaction.discount
-        ? `\nDISKON (${
-            receiptTransaction.discount.type === "percentage"
-              ? `${receiptTransaction.discount.value}%`
-              : `Rp ${receiptTransaction.discount.value.toLocaleString(
-                  "id-ID"
-                )}`
-          }): -Rp ${receiptTransaction.discount.amount.toLocaleString("id-ID")}`
-        : ""
+      const totalText = `Rp ${(item.price * item.quantity).toLocaleString(
+        "id-ID"
+      )}`;
+      const totalWidth = doc.getTextWidth(totalText);
+      doc.text(totalText, 80 - margin - totalWidth, y);
+
+      y += 5;
+    });
+
+    // Add separator for summary
+    y += 2;
+    doc.line(margin, y, 80 - margin, y);
+    y += 5;
+
+    // Payment details
+    doc.setFontSize(8);
+
+    // Subtotal
+    const subtotalText = `SUBTOTAL:`;
+    doc.text(subtotalText, margin, y);
+    const subtotalValueText = `Rp ${receiptTransaction.subtotal.toLocaleString(
+      "id-ID"
+    )}`;
+    const subtotalValueWidth = doc.getTextWidth(subtotalValueText);
+    doc.text(subtotalValueText, 80 - margin - subtotalValueWidth, y);
+    y += 4;
+
+    // Discount if applicable
+    if (receiptTransaction.discount) {
+      const discountLabel = `DISKON (${
+        receiptTransaction.discount.type === "percentage"
+          ? `${receiptTransaction.discount.value}%`
+          : `Rp ${receiptTransaction.discount.value.toLocaleString("id-ID")}`
+      }):`;
+      doc.text(discountLabel, margin, y);
+
+      const discountValueText = `-Rp ${receiptTransaction.discount.amount.toLocaleString(
+        "id-ID"
+      )}`;
+      const discountValueWidth = doc.getTextWidth(discountValueText);
+      doc.text(discountValueText, 80 - margin - discountValueWidth, y);
+      y += 4;
     }
-TOTAL: Rp ${receiptTransaction.total.toLocaleString("id-ID")}
-TUNAI: Rp ${receiptTransaction.cashReceived.toLocaleString("id-ID")}
-KEMBALI: Rp ${receiptTransaction.change.toLocaleString("id-ID")}
---------------------------------
 
-Terima kasih atas kunjungan Anda!
-Barang yang sudah dibeli tidak dapat dikembalikan.
+    // Total
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    const totalText = `TOTAL:`;
+    doc.text(totalText, margin, y);
+    const totalValueText = `Rp ${receiptTransaction.total.toLocaleString(
+      "id-ID"
+    )}`;
+    const totalValueWidth = doc.getTextWidth(totalValueText);
+    doc.text(totalValueText, 80 - margin - totalValueWidth, y);
+    y += 5;
 
-================================
-    `;
+    // Cash and change
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    const cashText = `TUNAI:`;
+    doc.text(cashText, margin, y);
+    const cashValueText = `Rp ${receiptTransaction.cashReceived.toLocaleString(
+      "id-ID"
+    )}`;
+    const cashValueWidth = doc.getTextWidth(cashValueText);
+    doc.text(cashValueText, 80 - margin - cashValueWidth, y);
+    y += 4;
 
-    const blob = new Blob([receiptContent], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `receipt-${receiptTransaction.id}.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
+    const changeText = `KEMBALI:`;
+    doc.text(changeText, margin, y);
+    const changeValueText = `Rp ${receiptTransaction.change.toLocaleString(
+      "id-ID"
+    )}`;
+    const changeValueWidth = doc.getTextWidth(changeValueText);
+    doc.text(changeValueText, 80 - margin - changeValueWidth, y);
+    y += 4;
+
+    // Add separator
+    doc.line(margin, y, 80 - margin, y);
+    y += 5;
+
+    // Footer
+    doc.setFontSize(7);
+    y = addCenteredText("Terima kasih atas kunjungan Anda!", y);
+    y = addCenteredText(
+      "Barang yang sudah dibeli tidak dapat dikembalikan.",
+      y
+    );
+    y += 2;
+
+    // Add final separator
+    doc.line(margin, y, 80 - margin, y);
+
+    // Save the PDF
+    doc.save(`struk-${receiptTransaction.id}.pdf`);
   };
 
   const formatDateTime = (date: Date) => {
@@ -1470,7 +1602,7 @@ Barang yang sudah dibeli tidak dapat dikembalikan.
                   <h2 className="font-bold text-lg">DASTER BORDIR CANTIK</h2>
                   <p>
                     Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,
-                    Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182
+                    Karsamenak, Kec. Tamansari, Kota. Tasikmalaya, Jawa Barat 46182
                   </p>
                   <p>0821-1931-5212</p>
                 </div>
