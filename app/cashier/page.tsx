@@ -3,6 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect } from "react";
+import { jsPDF } from "jspdf";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {

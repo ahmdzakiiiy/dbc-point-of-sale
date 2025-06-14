@@ -62,77 +62,119 @@ export default function ReportsPage() {
       month: "long",
     })
   }
-
   const generatePDFReport = () => {
     if (!date) return
 
     const monthYear = formatMonth(date)
-    const reportContent = `
-LAPORAN TRANSAKSI BULANAN
-DASTER BORDIR CANTIK
-
-Periode: ${monthYear}
-Tanggal Cetak: ${formatDate(new Date())}
-
-===========================================
-
-RINGKASAN BULAN ${monthYear.toUpperCase()}
-===========================================
-
-Total Transaksi: ${filteredTransactions.length}
-Total Penjualan Kotor: Rp ${grossAmount.toLocaleString("id-ID")}
-Total Diskon: Rp ${totalDiscount.toLocaleString("id-ID")}
-Total Pendapatan Bersih: Rp ${totalAmount.toLocaleString("id-ID")}
-Rata-rata per Transaksi: Rp ${filteredTransactions.length > 0 ? Math.round(totalAmount / filteredTransactions.length).toLocaleString("id-ID") : 0}
-
-===========================================
-
-DETAIL TRANSAKSI
-===========================================
-
-${
-  filteredTransactions.length === 0
-    ? "Tidak ada transaksi pada bulan yang dipilih"
-    : filteredTransactions
-        .map(
-          (transaction, index) =>
-            `${index + 1}. ${transaction.id}
-   Tanggal: ${formatDate(transaction.date)}
-   Total: Rp ${transaction.total.toLocaleString("id-ID")}${
-     transaction.discount > 0 ? `\n   Diskon: Rp ${transaction.discount.toLocaleString("id-ID")}` : ""
-   }
-   `,
-        )
-        .join("\n")
-}
-
-===========================================
-
-INFORMASI TOKO
-===========================================
-
-Nama Toko: Daster Bordir Cantik
-Alamat: Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8, Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182
-Telepon: 0821-1931-5212
-
-===========================================
-
-Laporan ini dibuat secara otomatis oleh sistem POS
-Daster Bordir Cantik pada ${formatDate(new Date())} ${new Date().toLocaleTimeString("id-ID")}
-
-© 2024 Daster Bordir Cantik. All rights reserved.
-    `
-
-    // Create and download the report as a text file (simulating PDF)
-    const blob = new Blob([reportContent], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `laporan-${monthYear.toLowerCase().replace(" ", "-")}.txt`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
+    
+    // Create PDF document with A4 size
+    const doc = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    })
+    
+    // Set font
+    doc.setFont('helvetica')
+    
+    // Add header
+    doc.setFontSize(16)
+    doc.text('LAPORAN TRANSAKSI BULANAN', 105, 15, { align: 'center' })
+    doc.text('DASTER BORDIR CANTIK', 105, 22, { align: 'center' })
+    
+    doc.setFontSize(12)
+    doc.text(`Periode: ${monthYear}`, 20, 35)
+    doc.text(`Tanggal Cetak: ${formatDate(new Date())}`, 20, 42)
+    
+    // Add separator
+    doc.line(20, 45, 190, 45)
+    
+    // Add summary
+    doc.setFontSize(14)
+    doc.text(`RINGKASAN BULAN ${monthYear.toUpperCase()}`, 105, 55, { align: 'center' })
+    doc.line(20, 58, 190, 58)
+    
+    doc.setFontSize(12)
+    doc.text(`Total Transaksi: ${filteredTransactions.length}`, 20, 65)
+    doc.text(`Total Penjualan Kotor: Rp ${grossAmount.toLocaleString("id-ID")}`, 20, 72)
+    doc.text(`Total Diskon: Rp ${totalDiscount.toLocaleString("id-ID")}`, 20, 79)
+    doc.text(`Total Pendapatan Bersih: Rp ${totalAmount.toLocaleString("id-ID")}`, 20, 86)
+    
+    const avgPerTransaction = filteredTransactions.length > 0 
+      ? Math.round(totalAmount / filteredTransactions.length).toLocaleString("id-ID") 
+      : 0
+    doc.text(`Rata-rata per Transaksi: Rp ${avgPerTransaction}`, 20, 93)
+    
+    // Add transaction details
+    doc.setFontSize(14)
+    doc.text('DETAIL TRANSAKSI', 105, 107, { align: 'center' })
+    doc.line(20, 110, 190, 110)
+    
+    doc.setFontSize(12)
+    let yPos = 118
+    
+    if (filteredTransactions.length === 0) {
+      doc.text("Tidak ada transaksi pada bulan yang dipilih", 20, yPos)
+    } else {
+      filteredTransactions.forEach((transaction, index) => {
+        // Check if we need to add a new page
+        if (yPos > 270) {
+          doc.addPage()
+          yPos = 20
+        }
+        
+        doc.text(`${index + 1}. ${transaction.id}`, 20, yPos)
+        yPos += 7
+        doc.text(`   Tanggal: ${formatDate(transaction.date)}`, 20, yPos)
+        yPos += 7
+        doc.text(`   Total: Rp ${transaction.total.toLocaleString("id-ID")}`, 20, yPos)
+        
+        if (transaction.discount > 0) {
+          yPos += 7
+          doc.text(`   Diskon: Rp ${transaction.discount.toLocaleString("id-ID")}`, 20, yPos)
+        }
+        
+        yPos += 10  // Add space between transactions
+      })
+    }
+    
+    // Add footer on the last page
+    if (yPos > 240) {
+      doc.addPage()
+      yPos = 20
+    }
+    
+    doc.line(20, yPos, 190, yPos)
+    yPos += 10
+    
+    doc.setFontSize(14)
+    doc.text('INFORMASI TOKO', 105, yPos, { align: 'center' })
+    yPos += 3
+    doc.line(20, yPos, 190, yPos)
+    yPos += 10
+    
+    doc.setFontSize(12)
+    doc.text('Nama Toko: Daster Bordir Cantik', 20, yPos)
+    yPos += 7
+    doc.text('Alamat: Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,', 20, yPos)
+    yPos += 7
+    doc.text('Karsamenak, Kec. Kawalu, Kab. Tasikmalaya, Jawa Barat 46182', 20, yPos)
+    yPos += 7
+    doc.text('Telepon: 0821-1931-5212', 20, yPos)
+    yPos += 10
+    
+    doc.line(20, yPos, 190, yPos)
+    yPos += 10
+    
+    doc.setFontSize(10)
+    doc.text(`Laporan ini dibuat secara otomatis oleh sistem POS`, 20, yPos)
+    yPos += 7
+    doc.text(`Daster Bordir Cantik pada ${formatDate(new Date())} ${new Date().toLocaleTimeString("id-ID")}`, 20, yPos)
+    yPos += 10
+    doc.text('© 2024 Daster Bordir Cantik. All rights reserved.', 105, yPos, { align: 'center' })
+    
+    // Save the PDF with a proper filename
+    doc.save(`laporan-${monthYear.toLowerCase().replace(" ", "-")}.pdf`)
   }
 
   const openPdfPreview = () => {
