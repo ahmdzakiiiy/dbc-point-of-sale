@@ -274,18 +274,18 @@ export default function ReportsPage() {
   return (
     <div className="flex min-h-screen flex-col">
       <DashboardNav />
-      <main className="flex-1 p-4 md:p-6">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-          <h1 className="text-2xl font-bold">Laporan Transaksi</h1>
+      <main className="flex-1 p-3 sm:p-4 md:p-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-3 md:gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold">Laporan Transaksi</h1>
 
-          <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
+          <div className="flex flex-col md:flex-row items-start md:items-center gap-2 sm:gap-3 md:gap-4">
             <Popover>
               <PopoverTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-[240px] justify-start text-left font-normal"
+                  className="w-full md:w-[240px] justify-start text-left font-normal text-xs sm:text-sm h-8 sm:h-10"
                 >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  <CalendarIcon className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                   {date ? formatMonth(date) : <span>Pilih bulan</span>}
                 </Button>
               </PopoverTrigger>
@@ -299,55 +299,55 @@ export default function ReportsPage() {
               </PopoverContent>
             </Popover>
 
-            <div className="flex gap-2">
+            <div className="flex gap-2 w-full md:w-auto">
               <Button
                 onClick={openPdfPreview}
-                className="bg-violet-500 hover:bg-violet-600"
+                className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10 w-full md:w-auto"
               >
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Cetak
               </Button>
             </div>
           </div>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>
+        <Card className="mb-3 sm:mb-4 md:mb-6 shadow-sm">
+          <CardHeader className="p-2 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base md:text-lg">
               Ringkasan Bulan {date ? formatMonth(date) : ""}
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">
+          <CardContent className="p-2 sm:p-4 md:p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+              <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Total Transaksi
                 </div>
-                <div className="text-2xl font-bold">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">
                   {filteredTransactions.length}
                 </div>
               </div>
-              <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">
+              <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Penjualan Kotor
                 </div>
-                <div className="text-2xl font-bold">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold">
                   Rp {grossAmount.toLocaleString("id-ID")}
                 </div>
               </div>
-              <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">
+              <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Total Diskon
                 </div>
-                <div className="text-2xl font-bold text-red-600">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-red-600">
                   Rp {totalDiscount.toLocaleString("id-ID")}
                 </div>
               </div>
-              <div className="p-4 border rounded-lg">
-                <div className="text-sm text-muted-foreground">
+              <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   Pendapatan Bersih
                 </div>
-                <div className="text-2xl font-bold text-green-600">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">
                   Rp {totalAmount.toLocaleString("id-ID")}
                 </div>
               </div>
@@ -355,35 +355,35 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Daftar Transaksi</CardTitle>
+        <Card className="shadow-sm">
+          <CardHeader className="p-2 sm:p-4 md:p-6">
+            <CardTitle className="text-sm sm:text-base md:text-lg">Daftar Transaksi</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-1 sm:p-2 md:p-4">
             {filteredTransactions.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
+              <div className="text-center py-4 sm:py-6 md:py-8 text-xs sm:text-sm text-muted-foreground">
                 Tidak ada transaksi pada bulan yang dipilih
               </div>
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>ID Transaksi</TableHead>
-                    <TableHead>Tanggal</TableHead>
-                    <TableHead className="text-right">Diskon</TableHead>
-                    <TableHead className="text-right">
-                      Total Pembayaran
+                    <TableHead className="text-xs sm:text-sm">ID Transaksi</TableHead>
+                    <TableHead className="text-xs sm:text-sm">Tanggal</TableHead>
+                    <TableHead className="text-xs sm:text-sm text-right">Diskon</TableHead>
+                    <TableHead className="text-xs sm:text-sm text-right">
+                      Total
                     </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredTransactions.map((transaction) => (
                     <TableRow key={transaction.id}>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
                         {transaction.id}
                       </TableCell>
-                      <TableCell>{formatDate(transaction.date)}</TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-xs sm:text-sm py-2 sm:py-4">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
                         {transaction.discount > 0 ? (
                           <span className="text-red-600">
                             Rp {transaction.discount.toLocaleString("id-ID")}
@@ -392,7 +392,7 @@ export default function ReportsPage() {
                           <span className="text-muted-foreground">-</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
                         Rp {transaction.total.toLocaleString("id-ID")}
                       </TableCell>
                     </TableRow>
@@ -405,42 +405,42 @@ export default function ReportsPage() {
 
         {/* PDF Preview Modal */}
         <Dialog open={pdfPreviewOpen} onOpenChange={setPdfPreviewOpen}>
-          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
+          <DialogContent className="max-w-[95%] md:max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader className="p-2 sm:p-4">
+              <DialogTitle className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                <FileText className="h-3 w-3 sm:h-5 sm:w-5" />
                 Preview Laporan PDF
               </DialogTitle>
-              <DialogDescription>
+              <DialogDescription className="text-xs sm:text-sm">
                 Preview laporan sebelum mengunduh atau mencetak
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
               {/* PDF Preview Content */}
-              <div className="bg-white border rounded-lg p-8 shadow-sm">
+              <div className="bg-white border rounded-lg p-3 sm:p-6 md:p-8 shadow-sm">
                 {/* Header */}
-                <div className="text-center border-b pb-6 mb-6">
-                  <h1 className="text-2xl font-bold mb-2">
+                <div className="text-center border-b pb-3 sm:pb-6 mb-3 sm:mb-6">
+                  <h1 className="text-lg sm:text-xl md:text-2xl font-bold mb-1 sm:mb-2">
                     LAPORAN TRANSAKSI BULANAN
                   </h1>
-                  <h2 className="text-xl font-semibold text-violet-600 mb-4">
+                  <h2 className="text-base sm:text-lg md:text-xl font-semibold text-violet-600 mb-2 sm:mb-4">
                     DASTER BORDIR CANTIK
                   </h2>
-                  <div className="text-sm text-muted-foreground space-y-1">
+                  <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
                     <p>Periode: {date ? formatMonth(date) : ""}</p>
                     <p>Tanggal Cetak: {formatDate(new Date())}</p>
                   </div>
                 </div>
 
                 {/* Summary Section */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4 text-center">
+                <div className="mb-4 sm:mb-8">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-center">
                     RINGKASAN BULAN{" "}
                     {date ? formatMonth(date).toUpperCase() : ""}
                   </h3>
-                  <div className="border rounded-lg p-4">
-                    <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="border rounded-lg p-2 sm:p-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                       <div className="flex justify-between">
                         <span>Total Transaksi:</span>
                         <span className="font-medium">
@@ -483,12 +483,12 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Transaction Details */}
-                <div className="mb-8">
-                  <h3 className="text-lg font-semibold mb-4 text-center">
+                <div className="mb-4 sm:mb-8">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-center">
                     DETAIL TRANSAKSI
                   </h3>
                   {filteredTransactions.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground border rounded-lg">
+                    <div className="text-center py-4 sm:py-8 text-xs sm:text-sm text-muted-foreground border rounded-lg">
                       Tidak ada transaksi pada bulan yang dipilih
                     </div>
                   ) : (
@@ -496,17 +496,17 @@ export default function ReportsPage() {
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-gray-50">
-                            <TableHead className="font-semibold">No.</TableHead>
-                            <TableHead className="font-semibold">
+                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">No.</TableHead>
+                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                               ID Transaksi
                             </TableHead>
-                            <TableHead className="font-semibold">
+                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                               Tanggal
                             </TableHead>
-                            <TableHead className="font-semibold text-right">
+                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4 text-right">
                               Diskon
                             </TableHead>
-                            <TableHead className="font-semibold text-right">
+                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4 text-right">
                               Total
                             </TableHead>
                           </TableRow>
@@ -514,16 +514,16 @@ export default function ReportsPage() {
                         <TableBody>
                           {filteredTransactions.map((transaction, index) => (
                             <TableRow key={transaction.id}>
-                              <TableCell className="font-medium">
+                              <TableCell className="font-medium text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 {index + 1}
                               </TableCell>
-                              <TableCell className="font-mono">
+                              <TableCell className="font-mono text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 {transaction.id}
                               </TableCell>
-                              <TableCell>
+                              <TableCell className="text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 {formatDate(transaction.date)}
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 {transaction.discount > 0 ? (
                                   <span className="text-red-600">
                                     Rp{" "}
@@ -537,7 +537,7 @@ export default function ReportsPage() {
                                   </span>
                                 )}
                               </TableCell>
-                              <TableCell className="text-right font-medium">
+                              <TableCell className="text-right font-medium text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 Rp {transaction.total.toLocaleString("id-ID")}
                               </TableCell>
                             </TableRow>
@@ -549,11 +549,11 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Store Information */}
-                <div className="border-t pt-6">
-                  <h3 className="text-lg font-semibold mb-4 text-center">
+                <div className="border-t pt-3 sm:pt-6">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-center">
                     INFORMASI TOKO
                   </h3>
-                  <div className="text-center text-sm space-y-1">
+                  <div className="text-center text-xs sm:text-sm space-y-1">
                     <p className="font-semibold">Daster Bordir Cantik</p>
                     <p>
                       Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8,
@@ -565,8 +565,8 @@ export default function ReportsPage() {
                 </div>
 
                 {/* Footer */}
-                <div className="border-t pt-4 mt-6">
-                  <div className="text-xs text-muted-foreground text-center space-y-1">
+                <div className="border-t pt-2 sm:pt-4 mt-3 sm:mt-6">
+                  <div className="text-[10px] sm:text-xs text-muted-foreground text-center space-y-1">
                     <p>
                       Laporan ini dibuat secara otomatis oleh sistem POS Daster
                       Bordir Cantik pada {formatDate(new Date())}{" "}
@@ -581,9 +581,9 @@ export default function ReportsPage() {
             <DialogFooter>
               <Button
                 onClick={confirmDownload}
-                className="bg-violet-500 hover:bg-violet-600"
+                className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10"
               >
-                <FileText className="mr-2 h-4 w-4" />
+                <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Cetak
               </Button>
             </DialogFooter>
