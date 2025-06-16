@@ -324,7 +324,11 @@ export default function CashierPage() {
           .toLowerCase()
           .includes(transactionSearchTerm.toLowerCase())
     )
-    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date, newest first
+    .sort((a, b) => {
+      const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+      const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+      return dateB.getTime() - dateA.getTime();
+    }); // Sort by date, newest first
 
   // Format number with thousands separator
   const formatCurrency = (amount: number | string) => {
@@ -827,9 +831,8 @@ export default function CashierPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                </div>
-                {/* Vertical 3-column grid layout */}{" "}
-                <div className="grid grid-cols-3 gap-3">
+                </div>                {/* Product grid layout - 2 columns on mobile, 3 on larger screens */}{" "}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {isLoading ? (
                     // Loading state - show 6 loading placeholders
                     Array.from({ length: 6 }).map((_, index) => (
