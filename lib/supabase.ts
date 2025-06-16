@@ -11,10 +11,39 @@ const supabaseAnonKey =
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Types for users table
+// Types for database tables
 export type User = {
   id: string;
   username: string;
   password: string; // Note: In production, passwords should never be stored in plain text
+  created_at?: string;
+};
+
+export type Product = {
+  id: string;
+  name: string;
+  stock: number;
+  price: number;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export type Transaction = {
+  id: string;
+  transaction_date: string;
+  total_amount: number;
+  discount_amount: number;
+  user_id?: string;
+  created_at?: string;
+};
+
+export type TransactionItem = {
+  id: string;
+  transaction_id: string;
+  product_id?: string;
+  product_name: string;
+  quantity: number;
+  price: number;
   created_at?: string;
 };

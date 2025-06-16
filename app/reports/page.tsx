@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,66 +26,65 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { CalendarIcon, FileText } from "lucide-react";
+import { CalendarIcon, FileText, Loader2 } from "lucide-react";
 import DashboardNav from "@/components/dashboard-nav";
-
-// Sample transaction data
-const transactions = [
-  { id: "TRX-001", date: new Date(2024, 3, 5), total: 255000, discount: 0 },
-  { id: "TRX-002", date: new Date(2024, 3, 7), total: 120000, discount: 0 },
-  {
-    id: "TRX-003",
-    date: new Date(2024, 3, 10),
-    total: 185000,
-    discount: 15000,
-  },
-  {
-    id: "TRX-004",
-    date: new Date(2024, 3, 12),
-    total: 300000,
-    discount: 30000,
-  },
-  { id: "TRX-005", date: new Date(2024, 3, 15), total: 135000, discount: 0 },
-  {
-    id: "TRX-006",
-    date: new Date(2024, 3, 18),
-    total: 275000,
-    discount: 25000,
-  },
-  { id: "TRX-007", date: new Date(2024, 3, 20), total: 165000, discount: 0 },
-  {
-    id: "TRX-008",
-    date: new Date(2024, 3, 22),
-    total: 220000,
-    discount: 20000,
-  },
-  { id: "TRX-009", date: new Date(2024, 3, 25), total: 195000, discount: 0 },
-  {
-    id: "TRX-010",
-    date: new Date(2024, 3, 28),
-    total: 310000,
-    discount: 31000,
-  },
-];
+import { useAuth } from "@/context/auth-context";
+import type { Transaction } from "@/lib/supabase";
 
 export default function ReportsPage() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
-  // Filter transactions for the selected month
-  const filteredTransactions = transactions.filter(
-    (transaction) =>
-      date &&
-      transaction.date.getMonth() === date.getMonth() &&
-      transaction.date.getFullYear() === date.getFullYear()
-  );
+  // Fetch transactions from the API
+  useEffect(() => {
+    const fetchTransactions = async () => {
+      if (!date) return;
+
+      try {
+        setLoading(true);
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1; // JavaScript months are 0-indexed
+
+        const response = await fetch(
+          `/api/transactions?year=${year}&month=${month}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Gagal mengambil data transaksi");
+        }
+
+        const data = await response.json();
+        setTransactions(data.transactions || []);
+        setError(null);
+      } catch (err) {
+        console.error("Error fetching transactions:", err);
+        setError("Gagal memuat transaksi. Silakan coba lagi.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransactions();
+  }, [date]);
+
+  // Format transaction data for consistent display
+  const formattedTransactions = transactions.map((transaction) => ({
+    ...transaction,
+    date: new Date(transaction.transaction_date),
+    total: Number(transaction.total_amount),
+    discount: Number(transaction.discount_amount),
+  }));
 
   // Calculate totals for the selected month
-  const totalAmount = filteredTransactions.reduce(
+  const totalAmount = formattedTransactions.reduce(
     (sum, transaction) => sum + transaction.total,
     0
   );
-  const totalDiscount = filteredTransactions.reduce(
+  const totalDiscount = formattedTransactions.reduce(
     (sum, transaction) => sum + transaction.discount,
     0
   );
@@ -141,7 +140,7 @@ export default function ReportsPage() {
     doc.line(20, 58, 190, 58);
 
     doc.setFontSize(12);
-    doc.text(`Total Transaksi: ${filteredTransactions.length}`, 20, 65);
+    doc.text(`Total Transaksi: ${formattedTransactions.length}`, 20, 65);
     doc.text(
       `Total Penjualan Kotor: Rp ${grossAmount.toLocaleString("id-ID")}`,
       20,
@@ -157,10 +156,9 @@ export default function ReportsPage() {
       20,
       86
     );
-
     const avgPerTransaction =
-      filteredTransactions.length > 0
-        ? Math.round(totalAmount / filteredTransactions.length).toLocaleString(
+      formattedTransactions.length > 0
+        ? Math.round(totalAmount / formattedTransactions.length).toLocaleString(
             "id-ID"
           )
         : 0;
@@ -173,11 +171,10 @@ export default function ReportsPage() {
 
     doc.setFontSize(12);
     let yPos = 118;
-
-    if (filteredTransactions.length === 0) {
+    if (formattedTransactions.length === 0) {
       doc.text("Tidak ada transaksi pada bulan yang dipilih", 20, yPos);
     } else {
-      filteredTransactions.forEach((transaction, index) => {
+      formattedTransactions.forEach((transaction, index) => {
         // Check if we need to add a new page
         if (yPos > 270) {
           doc.addPage();
@@ -322,9 +319,9 @@ export default function ReportsPage() {
               <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
                 <div className="text-xs sm:text-sm text-muted-foreground">
                   Total Transaksi
-                </div>
+                </div>{" "}
                 <div className="text-lg sm:text-xl md:text-2xl font-bold">
-                  {filteredTransactions.length}
+                  {formattedTransactions.length}
                 </div>
               </div>
               <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
@@ -360,9 +357,9 @@ export default function ReportsPage() {
             <CardTitle className="text-sm sm:text-base md:text-lg">
               Daftar Transaksi
             </CardTitle>
-          </CardHeader>
+          </CardHeader>{" "}
           <CardContent className="p-1 sm:p-2 md:p-4">
-            {filteredTransactions.length === 0 ? (
+            {formattedTransactions.length === 0 ? (
               <div className="text-center py-4 sm:py-6 md:py-8 text-xs sm:text-sm text-muted-foreground">
                 Tidak ada transaksi pada bulan yang dipilih
               </div>
@@ -385,28 +382,56 @@ export default function ReportsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredTransactions.map((transaction) => (
-                    <TableRow key={transaction.id}>
-                      <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
-                        {transaction.id}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
-                        {formatDate(transaction.date)}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
-                        {transaction.discount > 0 ? (
-                          <span className="text-red-600">
-                            Rp {transaction.discount.toLocaleString("id-ID")}
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground">-</span>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
-                        Rp {transaction.total.toLocaleString("id-ID")}
+                  {loading ? (
+                    <TableRow>
+                      {" "}
+                      <TableCell colSpan={4} className="text-center py-8">
+                        <Loader2 className="h-6 w-6 animate-spin inline-block mr-2 text-violet-500" />
+                        Memuat transaksi...
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : error ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-red-500"
+                      >
+                        {error}
+                      </TableCell>
+                    </TableRow>
+                  ) : formattedTransactions.length === 0 ? (
+                    <TableRow>
+                      <TableCell
+                        colSpan={4}
+                        className="text-center py-8 text-gray-500"
+                      >
+                        Tidak ada transaksi pada bulan ini.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    formattedTransactions.map((transaction) => (
+                      <TableRow key={transaction.id}>
+                        <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
+                          {transaction.id.substring(0, 8)}...
+                        </TableCell>
+                        <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                          {formatDate(transaction.date)}
+                        </TableCell>
+                        <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
+                          {transaction.discount > 0 ? (
+                            <span className="text-red-600">
+                              Rp {transaction.discount.toLocaleString("id-ID")}
+                            </span>
+                          ) : (
+                            <span className="text-muted-foreground">-</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
+                          Rp {transaction.total.toLocaleString("id-ID")}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             )}
@@ -454,16 +479,16 @@ export default function ReportsPage() {
                       <div className="flex justify-between">
                         <span>Total Transaksi:</span>
                         <span className="font-medium">
-                          {filteredTransactions.length}
+                          {formattedTransactions.length}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span>Rata-rata per Transaksi:</span>
                         <span className="font-medium">
                           Rp{" "}
-                          {filteredTransactions.length > 0
+                          {formattedTransactions.length > 0
                             ? Math.round(
-                                totalAmount / filteredTransactions.length
+                                totalAmount / formattedTransactions.length
                               ).toLocaleString("id-ID")
                             : 0}
                         </span>
@@ -497,7 +522,7 @@ export default function ReportsPage() {
                   <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-center">
                     DETAIL TRANSAKSI
                   </h3>
-                  {filteredTransactions.length === 0 ? (
+                  {formattedTransactions.length === 0 ? (
                     <div className="text-center py-4 sm:py-8 text-xs sm:text-sm text-muted-foreground border rounded-lg">
                       Tidak ada transaksi pada bulan yang dipilih
                     </div>
@@ -524,7 +549,7 @@ export default function ReportsPage() {
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {filteredTransactions.map((transaction, index) => (
+                          {formattedTransactions.map((transaction, index) => (
                             <TableRow key={transaction.id}>
                               <TableCell className="font-medium text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 {index + 1}

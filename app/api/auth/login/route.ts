@@ -17,11 +17,10 @@ export async function POST(request: Request) {
         .select("*")
         .eq("username", username)
         .limit(1);
-
       if (fetchError) {
         console.error("Error fetching user:", fetchError);
         return NextResponse.json(
-          { error: "Authentication error" },
+          { error: "Kesalahan autentikasi" },
           { status: 500 }
         );
       }
@@ -45,7 +44,7 @@ export async function POST(request: Request) {
         if (insertError) {
           console.error("Error creating user:", insertError);
           return NextResponse.json(
-            { error: "Could not create user" },
+            { error: "Tidak dapat membuat pengguna" },
             { status: 500 }
           );
         }
@@ -66,18 +65,13 @@ export async function POST(request: Request) {
         success: true,
         user: { username, id: userId },
       });
-    }
-
-    // If credentials don't match
+    } // If credentials don't match
     return NextResponse.json(
-      { error: "Invalid username or password" },
+      { error: "Username atau password salah" },
       { status: 401 }
     );
   } catch (error) {
     console.error("Login error:", error);
-    return NextResponse.json(
-      { error: "Authentication failed" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Autentikasi gagal" }, { status: 500 });
   }
 }
