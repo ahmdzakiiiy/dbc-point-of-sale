@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     const { username, password } = await request.json();
 
     // First implementation: Check hardcoded credentials
-    // In a real scenario, we'd query the database
+    // In a real scenario, we'd use password hashing and proper auth
     if (username === "admin" && password === "password123") {
       // Check if user exists in Supabase
       const { data: existingUsers, error: fetchError } = await supabase
@@ -65,11 +65,13 @@ export async function POST(request: Request) {
         success: true,
         user: { username, id: userId },
       });
-    } // If credentials don't match
-    return NextResponse.json(
-      { error: "Username atau password salah" },
-      { status: 401 }
-    );
+    } else {
+      // Credentials don't match
+      return NextResponse.json(
+        { error: "Username atau password salah" },
+        { status: 401 }
+      );
+    }
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json({ error: "Autentikasi gagal" }, { status: 500 });
