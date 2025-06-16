@@ -18,24 +18,13 @@ export default function DashboardNav() {
   const pathname = usePathname()
   const router = useRouter()
   const [username, setUsername] = useState("")
-  const [showLogoutIcon, setShowLogoutIcon] = useState(false)
+
   useEffect(() => {
     // Get username from localStorage
     const storedUsername = localStorage.getItem("username")
     if (storedUsername) {
       setUsername(storedUsername)
     }
-    
-    // Close logout icon when clicking outside
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as HTMLElement
-      if (!target.closest('.profile-menu-container')) {
-        setShowLogoutIcon(false)
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
   const navItems = [
@@ -89,30 +78,25 @@ export default function DashboardNav() {
                 <span className="hidden md:inline-block">{item.name}</span>
               </Button>
             </Link>
-          ))}          {/* User Menu - Click Profile to show Logout */}
-          <div className="flex flex-col items-center gap-2 relative profile-menu-container">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full"
-              onClick={() => setShowLogoutIcon(!showLogoutIcon)}
-            >
-              <User className="h-5 w-5" />
-              <span className="sr-only">User Profile</span>
-            </Button>
-            
-            {showLogoutIcon && (
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute top-10 rounded-full w-7 h-7 flex items-center justify-center text-red-600 hover:text-red-700 bg-white shadow-md border border-gray-100 hover:bg-red-50"
-                onClick={handleLogout}
-              >
-                <LogOut className="h-4 w-4" />
-                <span className="sr-only">Logout</span>
+          ))}
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="rounded-full">
+                <User className="h-5 w-5" />
+                <span className="sr-only">User menu</span>
               </Button>
-            )}
-          </div>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <div className="px-2 py-1.5 text-sm font-medium">{username || "Admin"}</div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-600">
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </nav>
       </div>
     </header>

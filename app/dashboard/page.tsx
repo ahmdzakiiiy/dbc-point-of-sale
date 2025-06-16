@@ -324,13 +324,12 @@ export default function DashboardPage() {
                       content={(props) => <CustomTooltip {...props} viewMode={viewMode} />}
                       cursor={{ stroke: "#8b5cf6", strokeWidth: 1 }}
                     />
-                    <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="line" />
-                    <Line
+                    <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="line" />                    <Line
                       type="monotone"
                       dataKey="sales"
                       stroke="#8b5cf6"
                       strokeWidth={3}
-                      dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
+                      dot={false}
                       activeDot={{ r: 6, stroke: "#8b5cf6", strokeWidth: 2, fill: "#fff" }}
                       name="Penjualan (Rp)"
                     />
