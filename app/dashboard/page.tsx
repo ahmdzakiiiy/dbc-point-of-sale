@@ -196,118 +196,112 @@ export default function DashboardPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
-              <Package className="h-4 w-4 text-violet-500" />
+        </div>        {/* Stats Cards */}
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4 sm:mb-6">
+          <Card className="p-2 sm:p-4">
+            <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Produk</CardTitle>
+              <Package className="h-3 w-3 sm:h-4 sm:w-4 text-violet-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{products.length}</div>
-              <p className="text-xs text-muted-foreground">6 jenis produk</p>
+            <CardContent className="p-2">
+              <div className="text-lg sm:text-2xl font-bold">{products.length}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">6 jenis produk</p>
+            </CardContent>
+          </Card>          <Card className="p-2 sm:p-4">
+            <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium">Stok Tersisa</CardTitle>
+              <ShoppingBag className="h-3 w-3 sm:h-4 sm:w-4 text-violet-500" />
+            </CardHeader>
+            <CardContent className="p-2">
+              <div className="text-lg sm:text-2xl font-bold">{products.reduce((total, product) => total + product.stock, 0)}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Total semua produk</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Stok Tersisa</CardTitle>
-              <ShoppingBag className="h-4 w-4 text-violet-500" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{products.reduce((total, product) => total + product.stock, 0)}</div>
-              <p className="text-xs text-muted-foreground">Total semua produk</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">
-                Penjualan {viewMode === "daily" ? "Bulan Ini" : "Tahun Ini"}
+          <Card className="p-2 sm:p-4">
+            <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">
+                Penjualan {viewMode === "daily" ? "Bulan" : "Tahun"}
               </CardTitle>
-              <DollarSign className="h-4 w-4 text-violet-500" />
+              <DollarSign className="h-3 w-3 sm:h-4 sm:w-4 text-violet-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Rp {totalSales.toLocaleString("id-ID")}</div>
-              <p className="text-xs text-muted-foreground">{totalTransactions} transaksi</p>
+            <CardContent className="p-2">
+              <div className="text-lg sm:text-2xl font-bold">Rp {totalSales.toLocaleString("id-ID")}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">{totalTransactions} transaksi</p>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Rata-rata Transaksi</CardTitle>
-              <TrendingUp className="h-4 w-4 text-violet-500" />
+          <Card className="p-2 sm:p-4">
+            <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 sm:pb-2">
+              <CardTitle className="text-xs sm:text-sm font-medium truncate">Rata-rata</CardTitle>
+              <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4 text-violet-500" />
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Rp {avgTransactionValue.toLocaleString("id-ID")}</div>
-              <p className={`text-xs ${currentPeriodGrowth >= 0 ? "text-green-600" : "text-red-600"}`}>
+            <CardContent className="p-2">
+              <div className="text-lg sm:text-2xl font-bold">Rp {avgTransactionValue.toLocaleString("id-ID")}</div>
+              <p className={`text-[10px] sm:text-xs ${currentPeriodGrowth >= 0 ? "text-green-600" : "text-red-600"}`}>
                 {currentPeriodGrowth >= 0 ? "+" : ""}
-                {currentPeriodGrowth}% dari periode sebelumnya
+                {currentPeriodGrowth}% periode lalu
               </p>
             </CardContent>
           </Card>
-        </div>
-
-        {/* Sales Chart */}
-        <Card>
-          <CardHeader>
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        </div>        {/* Sales Chart */}
+        <Card className="p-2 sm:p-4">
+          <CardHeader className="p-2 sm:p-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 sm:gap-4">
               <div>
-                <CardTitle className="flex items-center gap-2">
-                  <BarChart3 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-1 sm:gap-2 text-sm sm:text-base">
+                  <BarChart3 className="h-4 w-4 sm:h-5 sm:w-5" />
                   Tren Penjualan
                 </CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Monitoring performa penjualan {viewMode === "daily" ? "harian" : "bulanan"}
+                <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                  {viewMode === "daily" ? "Penjualan harian" : "Penjualan bulanan"}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1 sm:gap-2">
                 <Button
                   variant={viewMode === "daily" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("daily")}
-                  className={viewMode === "daily" ? "bg-violet-500 hover:bg-violet-600" : ""}
+                  className={`text-xs px-2 py-1 h-auto sm:h-8 ${viewMode === "daily" ? "bg-violet-500 hover:bg-violet-600" : ""}`}
                 >
-                  <Calendar className="h-4 w-4 mr-1" />
+                  <Calendar className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                   Harian
                 </Button>
                 <Button
                   variant={viewMode === "monthly" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("monthly")}
-                  className={viewMode === "monthly" ? "bg-violet-500 hover:bg-violet-600" : ""}
+                  className={`text-xs px-2 py-1 h-auto sm:h-8 ${viewMode === "monthly" ? "bg-violet-500 hover:bg-violet-600" : ""}`}
                 >
-                  <BarChart3 className="h-4 w-4 mr-1" />
+                  <BarChart3 className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                   Bulanan
                 </Button>
               </div>
             </div>
           </CardHeader>
-          <CardContent>
+          <CardContent className="p-2 sm:p-4">
             {isLoading ? (
-              <div className="h-[400px] flex items-center justify-center">
+              <div className="h-[250px] sm:h-[300px] md:h-[350px] flex items-center justify-center">
                 <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Memuat data penjualan...</p>
+                  <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-violet-500 mx-auto mb-2"></div>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Memuat data penjualan...</p>
                 </div>
               </div>
             ) : salesData.length === 0 ? (
-              <div className="h-[400px] flex items-center justify-center">
+              <div className="h-[250px] sm:h-[300px] md:h-[350px] flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Tidak ada data penjualan tersedia</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground">Tidak ada data penjualan tersedia</p>
                 </div>
               </div>
             ) : (
-              <div className="h-[400px] w-full">
+              <div className="h-[250px] sm:h-[300px] md:h-[350px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={salesData}
                     margin={{
-                      top: 20,
-                      right: 30,
-                      left: 20,
+                      top: 10,
+                      right: 20,
+                      left: 10,
                       bottom: 20,
                     }}
                   >

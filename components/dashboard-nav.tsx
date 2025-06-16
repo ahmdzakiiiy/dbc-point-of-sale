@@ -64,11 +64,10 @@ export default function DashboardNav() {
   }
 
   return (
-    <header className="sticky top-0 z-10 w-full border-b bg-background">
-      <div className="flex h-16 items-center px-4 md:px-6">
+    <header className="sticky top-0 z-10 w-full border-b bg-background">      <div className="flex h-16 items-center px-4 md:px-6">
         <div className="flex items-center gap-2 font-semibold">
           <Package className="h-6 w-6 text-violet-500" />
-          <span>Daster Bordir Cantik</span>
+          <span className="text-xs sm:text-sm md:text-base whitespace-nowrap">Daster Bordir Cantik</span>
         </div>
 
         <nav className="ml-auto flex items-center gap-4">
