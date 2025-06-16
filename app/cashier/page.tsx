@@ -750,10 +750,12 @@ export default function CashierPage() {
               <History className="h-4 w-4" />
               Riwayat Transaksi
             </TabsTrigger>
-          </TabsList>          <TabsContent value="products" className="mt-6">
+          </TabsList>
+
+          <TabsContent value="products" className="mt-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Product List */}
-              <div className="space-y-4 order-2 lg:order-1">
+              <div className="space-y-4">
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                   <Input
@@ -840,8 +842,10 @@ export default function CashierPage() {
                     </div>
                   )}
                 </div>
-              </div>              {/* Transaction Form */}
-              <Card className="order-1 lg:order-2">
+              </div>
+
+              {/* Transaction Form */}
+              <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <ShoppingCart className="h-5 w-5" />

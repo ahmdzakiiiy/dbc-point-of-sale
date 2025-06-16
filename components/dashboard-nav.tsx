@@ -64,29 +64,31 @@ export default function DashboardNav() {
   }
 
   return (
-    <header className="sticky top-0 z-10 w-full border-b bg-background">      <div className="flex h-16 items-center px-4 md:px-6">
+    <header className="sticky top-0 z-10 w-full border-b bg-background">
+      <div className="flex h-16 items-center px-4 md:px-6">
         <div className="flex items-center gap-2 font-semibold">
           <Package className="h-6 w-6 text-violet-500" />
-          <span className="text-xs sm:text-sm md:text-base whitespace-nowrap">Daster Bordir Cantik</span>
-        </div>
-
-        <nav className="ml-auto flex items-center gap-4">
+          <span>Daster Bordir Cantik</span>
+        </div>        <nav className="ml-auto flex items-center gap-4">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
-              <Button variant="ghost" className={cn("flex items-center gap-2", pathname === item.href && "bg-muted")}>
+              <div className={cn(
+                "flex items-center gap-2 py-2 px-1 relative", 
+                "hover:after:w-full after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-violet-500",
+                "after:w-0 after:transition-all after:duration-300 after:ease-in-out",
+                pathname === item.href && "after:w-full"
+              )}>
                 <item.icon className="h-4 w-4" />
                 <span className="hidden md:inline-block">{item.name}</span>
-              </Button>
+              </div>
             </Link>
-          ))}
-
-          {/* User Menu */}
+          ))}          {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <div className="p-1 cursor-pointer flex items-center justify-center">
                 <User className="h-5 w-5" />
                 <span className="sr-only">User menu</span>
-              </Button>
+              </div>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <div className="px-2 py-1.5 text-sm font-medium">{username || "Admin"}</div>
