@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100" fill="none">
+  <!-- Dress Body -->
+  <path d="M50 5C45 5 40 10 35 20L25 40V90H75V40L65 20C60 10 55 5 50 5Z" fill="#8B5CF6" stroke="#4C1D95" stroke-width="2"/>
+  
+  <!-- Neckline -->
+  <path d="M35 20C40 15 45 12 50 12C55 12 60 15 65 20" stroke="#4C1D95" stroke-width="2"/>
+  
+  <!-- Waistline -->
+  <path d="M25 50H75" stroke="#7C3AED" stroke-width="1.5" stroke-dasharray="2 1"/>
+  
+  <!-- Belt -->
+  <rect x="35" y="48" width="30" height="4" fill="#7C3AED" rx="2"/>
+  
+  <!-- Decorative Elements -->
+  <circle cx="50" cy="30" r="3" fill="#C4B5FD"/>
+  <circle cx="40" cy="35" r="2" fill="#C4B5FD"/>
+  <circle cx="60" cy="35" r="2" fill="#C4B5FD"/>
+  
+  <!-- Bottom Hem Pattern -->
+  <path d="M25 80C35 75 40 85 50 80C60 85 65 75 75 80" stroke="#C4B5FD" stroke-width="2"/>
+  
+  <!-- Shoulder Straps -->
+  <path d="M40 15L35 5" stroke="#4C1D95" stroke-width="2"/>
+  <path d="M60 15L65 5" stroke="#4C1D95" stroke-width="2"/>
+  
+  <!-- Dress Pattern - Small details -->
+  <path d="M45 60L55 60" stroke="#EDE9FE" stroke-width="1"/>
+  <path d="M42 65L58 65" stroke="#EDE9FE" stroke-width="1"/>
+  <path d="M40 70L60 70" stroke="#EDE9FE" stroke-width="1"/>
+</svg>

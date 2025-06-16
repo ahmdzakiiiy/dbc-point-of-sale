@@ -357,7 +357,9 @@ export default function ReportsPage() {
 
         <Card className="shadow-sm">
           <CardHeader className="p-2 sm:p-4 md:p-6">
-            <CardTitle className="text-sm sm:text-base md:text-lg">Daftar Transaksi</CardTitle>
+            <CardTitle className="text-sm sm:text-base md:text-lg">
+              Daftar Transaksi
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-1 sm:p-2 md:p-4">
             {filteredTransactions.length === 0 ? (
@@ -368,9 +370,15 @@ export default function ReportsPage() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="text-xs sm:text-sm">ID Transaksi</TableHead>
-                    <TableHead className="text-xs sm:text-sm">Tanggal</TableHead>
-                    <TableHead className="text-xs sm:text-sm text-right">Diskon</TableHead>
+                    <TableHead className="text-xs sm:text-sm">
+                      ID Transaksi
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm">
+                      Tanggal
+                    </TableHead>
+                    <TableHead className="text-xs sm:text-sm text-right">
+                      Diskon
+                    </TableHead>
                     <TableHead className="text-xs sm:text-sm text-right">
                       Total
                     </TableHead>
@@ -382,7 +390,9 @@ export default function ReportsPage() {
                       <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
                         {transaction.id}
                       </TableCell>
-                      <TableCell className="text-xs sm:text-sm py-2 sm:py-4">{formatDate(transaction.date)}</TableCell>
+                      <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                        {formatDate(transaction.date)}
+                      </TableCell>
                       <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
                         {transaction.discount > 0 ? (
                           <span className="text-red-600">
@@ -496,7 +506,9 @@ export default function ReportsPage() {
                       <Table>
                         <TableHeader>
                           <TableRow className="bg-gray-50">
-                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">No.</TableHead>
+                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">
+                              No.
+                            </TableHead>
                             <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                               ID Transaksi
                             </TableHead>

@@ -264,7 +264,8 @@ export default function StockPage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      <DashboardNav />      <main className="flex-1 p-3 sm:p-4 md:p-6">
+      <DashboardNav />{" "}
+      <main className="flex-1 p-3 sm:p-4 md:p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-3 md:gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">Manajemen Stok</h1>
           <div className="flex flex-col md:flex-row gap-2 sm:gap-3 md:gap-4 w-full md:w-auto">
@@ -282,14 +283,17 @@ export default function StockPage() {
               onClick={() => setIsAddModalOpen(true)}
               className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10"
             >
-              <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Tambah Produk
+              <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Tambah
+              Produk
             </Button>
           </div>
         </div>
 
         <Card className="p-2 sm:p-3 md:p-4 shadow-sm">
           <CardHeader className="p-2 sm:p-4">
-            <CardTitle className="text-sm sm:text-base md:text-lg">Daftar Produk</CardTitle>
+            <CardTitle className="text-sm sm:text-base md:text-lg">
+              Daftar Produk
+            </CardTitle>
           </CardHeader>
           <CardContent className="p-1 sm:p-2 md:p-4">
             <Table>
@@ -384,10 +388,15 @@ export default function StockPage() {
         </Card>
 
         {/* Delete Product Alert */}
-        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialog
+          open={isDeleteAlertOpen}
+          onOpenChange={setIsDeleteAlertOpen}
+        >
           <AlertDialogContent className="max-w-sm">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-sm sm:text-base md:text-lg">Hapus Produk</AlertDialogTitle>
+              <AlertDialogTitle className="text-sm sm:text-base md:text-lg">
+                Hapus Produk
+              </AlertDialogTitle>
               <AlertDialogDescription className="text-xs sm:text-sm">
                 Apakah Anda yakin ingin menghapus produk{" "}
                 <span className="font-medium">{currentProduct?.name}</span>?
@@ -395,7 +404,9 @@ export default function StockPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-2 sm:mt-4">
-              <AlertDialogCancel className="text-xs sm:text-sm h-8 sm:h-10">Batal</AlertDialogCancel>
+              <AlertDialogCancel className="text-xs sm:text-sm h-8 sm:h-10">
+                Batal
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteProduct}
                 className="bg-red-500 hover:bg-red-600 text-xs sm:text-sm h-8 sm:h-10"
@@ -413,7 +424,9 @@ export default function StockPage() {
         >
           <DialogContent className="max-w-sm">
             <DialogHeader className="p-2 sm:p-4">
-              <DialogTitle className="text-sm sm:text-base md:text-lg">Tambah Stok</DialogTitle>
+              <DialogTitle className="text-sm sm:text-base md:text-lg">
+                Tambah Stok
+              </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Tambah stok untuk produk:{" "}
                 <span className="font-medium">{currentProduct?.name}</span>
@@ -429,7 +442,10 @@ export default function StockPage() {
                 </div>
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="add-stock-quantity" className="text-xs sm:text-sm">
+                <Label
+                  htmlFor="add-stock-quantity"
+                  className="text-xs sm:text-sm"
+                >
                   Jumlah Stok yang Ditambahkan
                 </Label>{" "}
                 <Input
@@ -479,14 +495,18 @@ export default function StockPage() {
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader className="p-2 sm:p-4">
-              <DialogTitle className="text-sm sm:text-base md:text-lg">Tambah Produk Baru</DialogTitle>
+              <DialogTitle className="text-sm sm:text-base md:text-lg">
+                Tambah Produk Baru
+              </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Masukkan detail produk baru di bawah ini.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 sm:space-y-4">
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="product-image" className="text-xs sm:text-sm">Gambar Produk</Label>
+                <Label htmlFor="product-image" className="text-xs sm:text-sm">
+                  Gambar Produk
+                </Label>
                 <div className="space-y-2">
                   {imagePreview ? (
                     <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto">
@@ -522,7 +542,9 @@ export default function StockPage() {
                 </div>
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="name" className="text-xs sm:text-sm">Nama Produk</Label>
+                <Label htmlFor="name" className="text-xs sm:text-sm">
+                  Nama Produk
+                </Label>
                 <Input
                   id="name"
                   placeholder="Nama produk"
@@ -533,7 +555,9 @@ export default function StockPage() {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="stock" className="text-xs sm:text-sm">Stok Awal</Label>
+                <Label htmlFor="stock" className="text-xs sm:text-sm">
+                  Stok Awal
+                </Label>
                 <Input
                   id="stock"
                   type="number"
@@ -550,7 +574,9 @@ export default function StockPage() {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="price" className="text-xs sm:text-sm">Harga (Rp)</Label>
+                <Label htmlFor="price" className="text-xs sm:text-sm">
+                  Harga (Rp)
+                </Label>
                 <Input
                   id="price"
                   placeholder="Harga produk"
@@ -590,7 +616,9 @@ export default function StockPage() {
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader className="p-2 sm:p-4">
-              <DialogTitle className="text-sm sm:text-base md:text-lg">Edit Produk</DialogTitle>
+              <DialogTitle className="text-sm sm:text-base md:text-lg">
+                Edit Produk
+              </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Edit detail produk di bawah ini.
               </DialogDescription>
@@ -598,7 +626,12 @@ export default function StockPage() {
             {currentProduct && (
               <div className="space-y-2 sm:space-y-4">
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-product-image" className="text-xs sm:text-sm">Gambar Produk</Label>
+                  <Label
+                    htmlFor="edit-product-image"
+                    className="text-xs sm:text-sm"
+                  >
+                    Gambar Produk
+                  </Label>
                   <div className="space-y-2">
                     {imagePreview ? (
                       <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto">
@@ -634,7 +667,9 @@ export default function StockPage() {
                   </div>
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-name" className="text-xs sm:text-sm">Nama Produk</Label>
+                  <Label htmlFor="edit-name" className="text-xs sm:text-sm">
+                    Nama Produk
+                  </Label>
                   <Input
                     id="edit-name"
                     placeholder="Nama produk"
@@ -647,7 +682,9 @@ export default function StockPage() {
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-stock" className="text-xs sm:text-sm">Stok</Label>
+                  <Label htmlFor="edit-stock" className="text-xs sm:text-sm">
+                    Stok
+                  </Label>
                   <Input
                     id="edit-stock"
                     type="number"
@@ -664,11 +701,16 @@ export default function StockPage() {
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-price" className="text-xs sm:text-sm">Harga (Rp)</Label>
+                  <Label htmlFor="edit-price" className="text-xs sm:text-sm">
+                    Harga (Rp)
+                  </Label>
                   <Input
                     id="edit-price"
                     placeholder="Harga produk"
-                    value={(currentProduct as any).formattedPrice || formatPrice(currentProduct.price)}
+                    value={
+                      (currentProduct as any).formattedPrice ||
+                      formatPrice(currentProduct.price)
+                    }
                     onChange={(e) => {
                       const formattedPrice = formatPrice(e.target.value);
                       setCurrentProduct({
@@ -692,7 +734,9 @@ export default function StockPage() {
               </Button>
               <Button
                 onClick={handleEditProduct}
-                disabled={!currentProduct?.name || (currentProduct?.price || 0) <= 0}
+                disabled={
+                  !currentProduct?.name || (currentProduct?.price || 0) <= 0
+                }
                 className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10"
               >
                 Simpan
