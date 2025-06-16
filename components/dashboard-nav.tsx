@@ -82,7 +82,9 @@ export default function DashboardNav() {
         <nav className="ml-auto flex items-center gap-2 sm:gap-4 md:gap-6">
           {" "}
           {navItems.map((item) => (
-            <Link key={item.href} href={item.href}>              <div
+            <Link key={item.href} href={item.href}>
+              {" "}
+              <div
                 className={cn(
                   "flex items-center gap-2 py-2 px-1 mx-0 sm:mx-1 md:mx-2 relative font-medium",
                   "hover:after:w-full after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-violet-500",

@@ -859,10 +859,11 @@ export default function CashierPage() {
                     </div>
                   ) : (
                     <Table>
+                      {" "}
                       <TableHeader>
                         <TableRow>
                           <TableHead>Produk</TableHead>
-                          <TableHead>Qty</TableHead>
+                          <TableHead className="text-center">Qty</TableHead>
                           <TableHead>Harga</TableHead>
                           <TableHead className="text-right">Total</TableHead>
                         </TableRow>
@@ -871,8 +872,8 @@ export default function CashierPage() {
                         {cart.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.name}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
+                            <TableCell className="text-center">
+                              <div className="flex items-center justify-center space-x-2">
                                 <Button
                                   variant="outline"
                                   size="sm"
@@ -1477,11 +1478,12 @@ export default function CashierPage() {
                 <div className="space-y-4">
                   <h3 className="font-semibold">Detail Produk</h3>
                   <Table>
+                    {" "}
                     <TableHeader>
                       <TableRow>
                         <TableHead>Produk</TableHead>
                         <TableHead className="text-center">Qty</TableHead>
-                        <TableHead className="text-right">Harga</TableHead>
+                        <TableHead>Harga</TableHead>
                         <TableHead className="text-right">Total</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -1494,7 +1496,7 @@ export default function CashierPage() {
                           <TableCell className="text-center">
                             {item.quantity}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell>
                             Rp {item.price.toLocaleString("id-ID")}
                           </TableCell>
                           <TableCell className="text-right">

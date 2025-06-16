@@ -269,7 +269,8 @@ export default function DashboardPage() {
       <main className="flex-1 p-4 md:p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <h1 className="text-2xl font-bold">Dashboard</h1>
-        </div>        {/* Stats Cards */}
+        </div>{" "}
+        {/* Stats Cards */}
         <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4 md:grid-cols-2 lg:grid-cols-4 mb-4 md:mb-6">
           <Card className="p-2 sm:p-3 md:p-4">
             <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 md:pb-2">
@@ -279,10 +280,15 @@ export default function DashboardPage() {
               <Package className="h-3 w-3 md:h-4 md:w-4 text-violet-500" />
             </CardHeader>
             <CardContent className="p-2">
-              <div className="text-lg md:text-2xl font-bold">{products.length}</div>
-              <p className="text-[10px] md:text-xs text-muted-foreground">6 jenis produk</p>
+              <div className="text-lg md:text-2xl font-bold">
+                {products.length}
+              </div>
+              <p className="text-[10px] md:text-xs text-muted-foreground">
+                6 jenis produk
+              </p>
             </CardContent>
-          </Card>          <Card className="p-2 sm:p-3 md:p-4">
+          </Card>{" "}
+          <Card className="p-2 sm:p-3 md:p-4">
             <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 md:pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">
                 Stok
@@ -298,7 +304,6 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-
           <Card className="p-2 sm:p-3 md:p-4">
             <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 md:pb-2">
               <CardTitle className="text-xs md:text-sm font-medium truncate">
@@ -315,7 +320,6 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-
           <Card className="p-2 sm:p-3 md:p-4">
             <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 md:pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">
@@ -337,7 +341,8 @@ export default function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-        </div>        {/* Sales Chart */}
+        </div>{" "}
+        {/* Sales Chart */}
         <Card className="p-2 sm:p-3 md:p-4">
           <CardHeader className="p-2 sm:p-3 md:p-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 md:gap-4">
@@ -456,7 +461,8 @@ export default function DashboardPage() {
               </div>
             )}
           </CardContent>
-        </Card>        {/* Quick Stats Summary */}
+        </Card>{" "}
+        {/* Quick Stats Summary */}
         {salesData.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 md:gap-4 mt-3 sm:mt-4 md:mt-6">
             <Card className="p-2 sm:p-3 md:p-4">
@@ -473,9 +479,7 @@ export default function DashboardPage() {
                   ).toLocaleString("id-ID")}
                 </div>
                 <p className="text-[10px] md:text-xs text-muted-foreground">
-                  {viewMode === "daily"
-                    ? "Hari terbaik"
-                    : "Bulan terbaik"}
+                  {viewMode === "daily" ? "Hari terbaik" : "Bulan terbaik"}
                 </p>
               </CardContent>
             </Card>
@@ -511,9 +515,7 @@ export default function DashboardPage() {
                   )}
                 </div>
                 <p className="text-[10px] md:text-xs text-muted-foreground">
-                  {viewMode === "daily"
-                    ? "Per hari"
-                    : "Per bulan"}
+                  {viewMode === "daily" ? "Per hari" : "Per bulan"}
                 </p>
               </CardContent>
             </Card>
