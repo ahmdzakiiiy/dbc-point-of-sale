@@ -1,30 +1,51 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Package, DollarSign, ShoppingBag, TrendingUp, Calendar, BarChart3 } from "lucide-react"
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts"
-import DashboardNav from "@/components/dashboard-nav"
+import { useState, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Package,
+  DollarSign,
+  ShoppingBag,
+  TrendingUp,
+  Calendar,
+  BarChart3,
+} from "lucide-react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+import DashboardNav from "@/components/dashboard-nav";
 
 // Sample daily sales data for the current month
 const generateDailySalesData = (): DailySalesData[] => {
-  const currentDate = new Date()
-  const currentMonth = currentDate.getMonth()
-  const currentYear = currentDate.getFullYear()
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth();
+  const currentYear = currentDate.getFullYear();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
 
-  const dailyData: DailySalesData[] = []
+  const dailyData: DailySalesData[] = [];
   for (let day = 1; day <= Math.min(daysInMonth, 30); day++) {
-    const date = new Date(currentYear, currentMonth, day)
-    const dayName = date.toLocaleDateString("id-ID", { weekday: "short" })
-    const dateStr = date.toLocaleDateString("id-ID", { day: "2-digit", month: "2-digit" })
+    const date = new Date(currentYear, currentMonth, day);
+    const dayName = date.toLocaleDateString("id-ID", { weekday: "short" });
+    const dateStr = date.toLocaleDateString("id-ID", {
+      day: "2-digit",
+      month: "2-digit",
+    });
 
     // Generate realistic sales data with some variation
-    const baseAmount = 200000 + Math.random() * 300000
-    const weekendMultiplier = date.getDay() === 0 || date.getDay() === 6 ? 1.3 : 1
-    const sales = Math.round(baseAmount * weekendMultiplier)
-    const transactions = Math.floor(sales / 150000) + Math.floor(Math.random() * 5) + 1
+    const baseAmount = 200000 + Math.random() * 300000;
+    const weekendMultiplier =
+      date.getDay() === 0 || date.getDay() === 6 ? 1.3 : 1;
+    const sales = Math.round(baseAmount * weekendMultiplier);
+    const transactions =
+      Math.floor(sales / 150000) + Math.floor(Math.random() * 5) + 1;
 
     dailyData.push({
       day: day,
@@ -33,11 +54,11 @@ const generateDailySalesData = (): DailySalesData[] => {
       sales: sales,
       transactions: transactions,
       avgTransaction: Math.round(sales / transactions),
-    })
+    });
   }
 
-  return dailyData
-}
+  return dailyData;
+};
 
 // Define interfaces for sales data
 interface SalesDataItem {
@@ -60,15 +81,29 @@ interface MonthlySalesData extends SalesDataItem {
 
 // Sample monthly sales data for the current year
 const generateMonthlySalesData = (): MonthlySalesData[] => {
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Ags", "Sep", "Okt", "Nov", "Des"]
+  const monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "Mei",
+    "Jun",
+    "Jul",
+    "Ags",
+    "Sep",
+    "Okt",
+    "Nov",
+    "Des",
+  ];
 
-  const monthlyData: MonthlySalesData[] = []
+  const monthlyData: MonthlySalesData[] = [];
   for (let month = 0; month < 12; month++) {
     // Generate realistic monthly sales data
-    const baseAmount = 5000000 + Math.random() * 3000000
-    const seasonalMultiplier = month >= 10 || month <= 1 ? 1.2 : 1 // Higher sales in holiday months
-    const sales = Math.round(baseAmount * seasonalMultiplier)
-    const transactions = Math.floor(sales / 150000) + Math.floor(Math.random() * 50) + 10
+    const baseAmount = 5000000 + Math.random() * 3000000;
+    const seasonalMultiplier = month >= 10 || month <= 1 ? 1.2 : 1; // Higher sales in holiday months
+    const sales = Math.round(baseAmount * seasonalMultiplier);
+    const transactions =
+      Math.floor(sales / 150000) + Math.floor(Math.random() * 50) + 10;
 
     monthlyData.push({
       month: month + 1,
@@ -78,13 +113,17 @@ const generateMonthlySalesData = (): MonthlySalesData[] => {
       avgTransaction: Math.round(sales / transactions),
       growth:
         month > 0 && monthlyData[month - 1]
-          ? Math.round(((sales - monthlyData[month - 1].sales) / monthlyData[month - 1].sales) * 100)
+          ? Math.round(
+              ((sales - monthlyData[month - 1].sales) /
+                monthlyData[month - 1].sales) *
+                100
+            )
           : 0,
-    })
+    });
   }
 
-  return monthlyData
-}
+  return monthlyData;
+};
 
 // Custom tooltip component interface
 interface CustomTooltipProps {
@@ -95,90 +134,124 @@ interface CustomTooltipProps {
 }
 
 // Custom tooltip component
-const CustomTooltip = ({ active, payload, label, viewMode }: CustomTooltipProps) => {
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+  viewMode,
+}: CustomTooltipProps) => {
   if (!active || !payload || !payload.length) {
-    return null
+    return null;
   }
 
-  const data = payload[0].payload
+  const data = payload[0].payload;
 
   if (!data) {
-    return null
+    return null;
   }
 
   return (
     <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
       <div className="font-semibold text-gray-800 mb-2">
-        {viewMode === "daily" ? `${data.dayName}, ${data.date}` : `${data.monthName} ${new Date().getFullYear()}`}
+        {viewMode === "daily"
+          ? `${data.dayName}, ${data.date}`
+          : `${data.monthName} ${new Date().getFullYear()}`}
       </div>
       <div className="space-y-1 text-sm">
         <div className="flex justify-between items-center gap-4">
           <span className="text-gray-600">Penjualan:</span>
-          <span className="font-medium text-green-600">Rp {data.sales?.toLocaleString("id-ID") || "0"}</span>
+          <span className="font-medium text-green-600">
+            Rp {data.sales?.toLocaleString("id-ID") || "0"}
+          </span>
         </div>
         <div className="flex justify-between items-center gap-4">
           <span className="text-gray-600">Transaksi:</span>
-          <span className="font-medium text-blue-600">{data.transactions || 0}</span>
+          <span className="font-medium text-blue-600">
+            {data.transactions || 0}
+          </span>
         </div>
         <div className="flex justify-between items-center gap-4">
           <span className="text-gray-600">Rata-rata:</span>
-          <span className="font-medium text-purple-600">Rp {data.avgTransaction?.toLocaleString("id-ID") || "0"}</span>
+          <span className="font-medium text-purple-600">
+            Rp {data.avgTransaction?.toLocaleString("id-ID") || "0"}
+          </span>
         </div>
-        {viewMode === "monthly" && data.growth !== undefined && data.growth !== 0 && (
-          <div className="flex justify-between items-center gap-4 pt-1 border-t">
-            <span className="text-gray-600">Pertumbuhan:</span>
-            <span className={`font-medium ${data.growth > 0 ? "text-green-600" : "text-red-600"}`}>
-              {data.growth > 0 ? "+" : ""}
-              {data.growth}%
-            </span>
-          </div>
-        )}
+        {viewMode === "monthly" &&
+          data.growth !== undefined &&
+          data.growth !== 0 && (
+            <div className="flex justify-between items-center gap-4 pt-1 border-t">
+              <span className="text-gray-600">Pertumbuhan:</span>
+              <span
+                className={`font-medium ${
+                  data.growth > 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
+                {data.growth > 0 ? "+" : ""}
+                {data.growth}%
+              </span>
+            </div>
+          )}
       </div>
     </div>
-  )
-}
+  );
+};
 
 export default function DashboardPage() {
-  const [viewMode, setViewMode] = useState<"daily" | "monthly">("daily")
-  const [salesData, setSalesData] = useState<DailySalesData[] | MonthlySalesData[]>([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [viewMode, setViewMode] = useState<"daily" | "monthly">("daily");
+  const [salesData, setSalesData] = useState<
+    DailySalesData[] | MonthlySalesData[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Simulate data fetching
   useEffect(() => {
     const fetchSalesData = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
 
       try {
         // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 500))
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
-        const data = viewMode === "daily" ? generateDailySalesData() : generateMonthlySalesData()
-        setSalesData(data)
+        const data =
+          viewMode === "daily"
+            ? generateDailySalesData()
+            : generateMonthlySalesData();
+        setSalesData(data);
       } catch (error) {
-        console.error("Error fetching sales data:", error)
-        setSalesData([])
+        console.error("Error fetching sales data:", error);
+        setSalesData([]);
       } finally {
-        setIsLoading(false)
+        setIsLoading(false);
       }
-    }
+    };
 
-    fetchSalesData()
-  }, [viewMode])
+    fetchSalesData();
+  }, [viewMode]);
 
   // Calculate summary statistics with safety checks
-  const totalSales = salesData.reduce((sum, item) => sum + (item?.sales || 0), 0)
-  const totalTransactions = salesData.reduce((sum, item) => sum + (item?.transactions || 0), 0)
-  const avgTransactionValue = totalTransactions > 0 ? Math.round(totalSales / totalTransactions) : 0
+  const totalSales = salesData.reduce(
+    (sum, item) => sum + (item?.sales || 0),
+    0
+  );
+  const totalTransactions = salesData.reduce(
+    (sum, item) => sum + (item?.transactions || 0),
+    0
+  );
+  const avgTransactionValue =
+    totalTransactions > 0 ? Math.round(totalSales / totalTransactions) : 0;
 
   // Get current period growth (comparing last two periods)
   const currentPeriodGrowth =
-    salesData.length >= 2 && salesData[salesData.length - 1] && salesData[salesData.length - 2]
+    salesData.length >= 2 &&
+    salesData[salesData.length - 1] &&
+    salesData[salesData.length - 2]
       ? Math.round(
-          ((salesData[salesData.length - 1].sales - salesData[salesData.length - 2].sales) /
+          ((salesData[salesData.length - 1].sales -
+            salesData[salesData.length - 2].sales) /
             salesData[salesData.length - 2].sales) *
-            100,
+            100
         )
-      : 0
+      : 0;
 
   // Sample product data for stats
   const products = [
@@ -188,7 +261,7 @@ export default function DashboardPage() {
     { id: 4, name: "Dress Hitam", stock: 12, price: 150000 },
     { id: 5, name: "Kemeja Navy", stock: 4, price: 110000 },
     { id: 6, name: "Kaftan Coklat", stock: 7, price: 165000 },
-  ]
+  ];
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -202,7 +275,9 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Total Produk</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Produk
+              </CardTitle>
               <Package className="h-4 w-4 text-violet-500" />
             </CardHeader>
             <CardContent>
@@ -213,12 +288,18 @@ export default function DashboardPage() {
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Stok Tersisa</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Stok Tersisa
+              </CardTitle>
               <ShoppingBag className="h-4 w-4 text-violet-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{products.reduce((total, product) => total + product.stock, 0)}</div>
-              <p className="text-xs text-muted-foreground">Total semua produk</p>
+              <div className="text-2xl font-bold">
+                {products.reduce((total, product) => total + product.stock, 0)}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Total semua produk
+              </p>
             </CardContent>
           </Card>
 
@@ -230,19 +311,31 @@ export default function DashboardPage() {
               <DollarSign className="h-4 w-4 text-violet-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rp {totalSales.toLocaleString("id-ID")}</div>
-              <p className="text-xs text-muted-foreground">{totalTransactions} transaksi</p>
+              <div className="text-2xl font-bold">
+                Rp {totalSales.toLocaleString("id-ID")}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {totalTransactions} transaksi
+              </p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium">Rata-rata Transaksi</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Rata-rata Transaksi
+              </CardTitle>
               <TrendingUp className="h-4 w-4 text-violet-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">Rp {avgTransactionValue.toLocaleString("id-ID")}</div>
-              <p className={`text-xs ${currentPeriodGrowth >= 0 ? "text-green-600" : "text-red-600"}`}>
+              <div className="text-2xl font-bold">
+                Rp {avgTransactionValue.toLocaleString("id-ID")}
+              </div>
+              <p
+                className={`text-xs ${
+                  currentPeriodGrowth >= 0 ? "text-green-600" : "text-red-600"
+                }`}
+              >
                 {currentPeriodGrowth >= 0 ? "+" : ""}
                 {currentPeriodGrowth}% dari periode sebelumnya
               </p>
@@ -260,7 +353,8 @@ export default function DashboardPage() {
                   Tren Penjualan
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Monitoring performa penjualan {viewMode === "daily" ? "harian" : "bulanan"}
+                  Monitoring performa penjualan{" "}
+                  {viewMode === "daily" ? "harian" : "bulanan"}
                 </p>
               </div>
               <div className="flex items-center gap-2">
@@ -268,7 +362,11 @@ export default function DashboardPage() {
                   variant={viewMode === "daily" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("daily")}
-                  className={viewMode === "daily" ? "bg-violet-500 hover:bg-violet-600" : ""}
+                  className={
+                    viewMode === "daily"
+                      ? "bg-violet-500 hover:bg-violet-600"
+                      : ""
+                  }
                 >
                   <Calendar className="h-4 w-4 mr-1" />
                   Harian
@@ -277,7 +375,11 @@ export default function DashboardPage() {
                   variant={viewMode === "monthly" ? "default" : "outline"}
                   size="sm"
                   onClick={() => setViewMode("monthly")}
-                  className={viewMode === "monthly" ? "bg-violet-500 hover:bg-violet-600" : ""}
+                  className={
+                    viewMode === "monthly"
+                      ? "bg-violet-500 hover:bg-violet-600"
+                      : ""
+                  }
                 >
                   <BarChart3 className="h-4 w-4 mr-1" />
                   Bulanan
@@ -290,13 +392,17 @@ export default function DashboardPage() {
               <div className="h-[400px] flex items-center justify-center">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-violet-500 mx-auto mb-2"></div>
-                  <p className="text-sm text-muted-foreground">Memuat data penjualan...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Memuat data penjualan...
+                  </p>
                 </div>
               </div>
             ) : salesData.length === 0 ? (
               <div className="h-[400px] flex items-center justify-center">
                 <div className="text-center">
-                  <p className="text-sm text-muted-foreground">Tidak ada data penjualan tersedia</p>
+                  <p className="text-sm text-muted-foreground">
+                    Tidak ada data penjualan tersedia
+                  </p>
                 </div>
               </div>
             ) : (
@@ -324,20 +430,32 @@ export default function DashboardPage() {
                       fontSize={12}
                       tickLine={false}
                       axisLine={false}
-                      tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                      tickFormatter={(value) =>
+                        `${(value / 1000000).toFixed(1)}M`
+                      }
                     />
                     <Tooltip
-                      content={(props) => <CustomTooltip {...props} viewMode={viewMode} />}
+                      content={(props) => (
+                        <CustomTooltip {...props} viewMode={viewMode} />
+                      )}
                       cursor={{ stroke: "#8b5cf6", strokeWidth: 1 }}
                     />
-                    <Legend wrapperStyle={{ paddingTop: "20px" }} iconType="line" />
+                    <Legend
+                      wrapperStyle={{ paddingTop: "20px" }}
+                      iconType="line"
+                    />{" "}
                     <Line
                       type="monotone"
                       dataKey="sales"
                       stroke="#8b5cf6"
                       strokeWidth={3}
-                      dot={{ fill: "#8b5cf6", strokeWidth: 2, r: 4 }}
-                      activeDot={{ r: 6, stroke: "#8b5cf6", strokeWidth: 2, fill: "#fff" }}
+                      dot={false}
+                      activeDot={{
+                        r: 6,
+                        stroke: "#8b5cf6",
+                        strokeWidth: 2,
+                        fill: "#fff",
+                      }}
                       name="Penjualan (Rp)"
                     />
                   </LineChart>
@@ -352,40 +470,59 @@ export default function DashboardPage() {
           <div className="grid gap-4 md:grid-cols-3 mt-6">
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Penjualan Tertinggi</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Penjualan Tertinggi
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-green-600">
-                  Rp {Math.max(...salesData.map((d) => d.sales || 0)).toLocaleString("id-ID")}
+                  Rp{" "}
+                  {Math.max(
+                    ...salesData.map((d) => d.sales || 0)
+                  ).toLocaleString("id-ID")}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {viewMode === "daily" ? "Hari terbaik bulan ini" : "Bulan terbaik tahun ini"}
+                  {viewMode === "daily"
+                    ? "Hari terbaik bulan ini"
+                    : "Bulan terbaik tahun ini"}
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Transaksi Terbanyak</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Transaksi Terbanyak
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-blue-600">
-                  {Math.max(...salesData.map((d) => d.transactions || 0))} transaksi
+                  {Math.max(...salesData.map((d) => d.transactions || 0))}{" "}
+                  transaksi
                 </div>
-                <p className="text-xs text-muted-foreground">Volume tertinggi periode ini</p>
+                <p className="text-xs text-muted-foreground">
+                  Volume tertinggi periode ini
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Rata-rata Harian</CardTitle>
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Rata-rata Harian
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="text-xl font-bold text-purple-600">
-                  Rp {Math.round(totalSales / salesData.length).toLocaleString("id-ID")}
+                  Rp{" "}
+                  {Math.round(totalSales / salesData.length).toLocaleString(
+                    "id-ID"
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {viewMode === "daily" ? "Per hari bulan ini" : "Per bulan tahun ini"}
+                  {viewMode === "daily"
+                    ? "Per hari bulan ini"
+                    : "Per bulan tahun ini"}
                 </p>
               </CardContent>
             </Card>
@@ -393,5 +530,5 @@ export default function DashboardPage() {
         )}
       </main>
     </div>
-  )
+  );
 }
