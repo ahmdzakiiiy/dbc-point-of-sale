@@ -24,10 +24,10 @@ export default function ClientLayout({
       const isLoggedIn = localStorage.getItem("isLoggedIn");
       const username = localStorage.getItem("username");
       const userId = localStorage.getItem("userId");
-      
+
       // Only consider authenticated if ALL needed values exist
       const isAuthenticated = isLoggedIn === "true" && username && userId;
-      
+
       const protectedPaths = ["/dashboard", "/cashier", "/stock", "/reports"];
       const isProtectedPath = protectedPaths.some((path) =>
         pathname.startsWith(path)
@@ -41,12 +41,12 @@ export default function ClientLayout({
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("username");
         localStorage.removeItem("userId");
-        
+
         // Clear cookies
         document.cookie = "isLoggedIn=; path=/; max-age=0";
         document.cookie = "username=; path=/; max-age=0";
         document.cookie = "userId=; path=/; max-age=0";
-        
+
         router.push("/login");
       }
 

@@ -4,12 +4,15 @@ import { supabase } from "@/lib/supabase";
 export async function GET(req: Request) {
   try {
     const url = new URL(req.url);
-    const limit = parseInt(url.searchParams.get("limit") || "20");
-
-    // Get transactions with their items
+    const limit = parseInt(url.searchParams.get("limit") || "20");    // Get transactions with their items and join with users table to get username
     const { data: transactions, error: transactionsError } = await supabase
       .from("transactions")
-      .select("*")
+      .select(`
+        *,
+        users:user_id (
+          username
+        )
+      `)
       .order("transaction_date", { ascending: false })
       .limit(limit);
 
@@ -49,9 +52,9 @@ export async function GET(req: Request) {
                 value: Number(transaction.discount_amount),
                 amount: Number(transaction.discount_amount),
               }
-            : undefined,
-          total: Number(transaction.total_amount),
-          cashier: transaction.user_id || "Admin",
+            : undefined,          total: Number(transaction.total_amount),
+          cashier: transaction.users?.username || "Admin",
+          cashierId: transaction.user_id,
           status: "completed",
           items: items.map((item) => ({
             id: item.product_id,

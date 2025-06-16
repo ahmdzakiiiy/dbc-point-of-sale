@@ -78,7 +78,7 @@ type Discount = {
 
 type Transaction = {
   id: string;
-  date: Date;
+  date: Date | string; // Can be either Date object or ISO string from API
   items: CartItem[];
   subtotal: number;
   discount?: Discount;
@@ -469,17 +469,32 @@ export default function CashierPage() {
     setDiscountType("percentage");
     setDiscountValue("");
     setDiscountApplied(false);
-  };
-  const handlePayment = async () => {
+  };  const handlePayment = async () => {
     setIsProcessing(true);
 
-    try {
-      const subtotal = calculateSubtotal();
-      const discount = discountApplied ? calculateDiscount() : undefined;
+    try {      const subtotal = calculateSubtotal();
+      // Pastikan discount selalu memiliki format yang konsisten untuk server
+      const discount = discountApplied ? calculateDiscount() : { type: "fixed", value: 0, amount: 0 };
       const total = calculateTotal();
       const cashAmountValue = getNumericValue(cashAmount);
       const change = cashAmountValue - total;
-      const cashier = localStorage.getItem("username") || "Admin";
+      // Gunakan userId (UUID) alih-alih username untuk foreign key
+      const cashierId = localStorage.getItem("userId");
+      const cashierName = localStorage.getItem("username") || "Admin";
+      
+      if (!cashierId) {
+        throw new Error("User ID tidak ditemukan. Silakan login kembali.");
+      }      // Log transaksi ke konsol untuk debug
+      console.log("Mengirim data transaksi:", {
+        items: cart,
+        subtotal,
+        discount,
+        total,
+        cashReceived: cashAmountValue,
+        change,
+        cashierId,
+        cashierName
+      });
 
       // Send transaction data to API
       const response = await fetch("/api/cashier/checkout", {
@@ -488,28 +503,41 @@ export default function CashierPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          items: [...cart],
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
           subtotal,
           discount,
           total,
           cashReceived: cashAmountValue,
           change,
-          cashier,
+          cashierId, // Kirim ID (UUID)
+          cashierName // Kirim nama untuk tampilan
         }),
-      });
-
+      });      // Log response untuk debug
+      console.log("Status response:", response.status);
+      
       if (!response.ok) {
         const errorData = await response.json();
+        console.error("Error dari server:", errorData);
         throw new Error(errorData.error || "Gagal memproses pembayaran");
-      }
+      }      const result = await response.json();
+      console.log("Data transaksi dari server:", result);
 
-      const result = await response.json();
+      // Convert string date to Date object
+      const transactionWithDateObj = {
+        ...result.transaction,
+        date: new Date(result.transaction.date) // Konversi string date ke objek Date
+      };
 
-      // Use the transaction data returned from API
-      setLastTransaction(result.transaction);
+      // Use the transaction data returned from API with proper date object
+      setLastTransaction(transactionWithDateObj);
 
-      // Update local transactions list with the new transaction
-      setTransactions((prev) => [result.transaction, ...prev]);
+      // Update local transactions list with the new transaction with proper date object
+      setTransactions((prev) => [transactionWithDateObj, ...prev]);
 
       // Reset form
       setCart([]);
@@ -525,19 +553,32 @@ export default function CashierPage() {
       setIsProcessing(false);
     }
   };
-
   const viewTransactionDetail = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
+    // Convert date to Date object if it's a string
+    const transactionWithDateObj = {
+      ...transaction,
+      date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date),
+    };
+    setSelectedTransaction(transactionWithDateObj);
     setTransactionDetailModalOpen(true);
   };
-
   const reprintReceipt = (transaction: Transaction) => {
-    setLastTransaction(transaction);
+    // Convert date to Date object if it's a string
+    const transactionWithDateObj = {
+      ...transaction,
+      date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date),
+    };
+    setLastTransaction(transactionWithDateObj);
     setReceiptModalOpen(true);
-  };
-  const downloadReceipt = (transaction?: Transaction) => {
-    const receiptTransaction = transaction || lastTransaction;
-    if (!receiptTransaction) return;
+  };  const downloadReceipt = (transaction?: Transaction) => {
+    const inputTransaction = transaction || lastTransaction;
+    if (!inputTransaction) return;
+    
+    // Ensure date is a Date object
+    const receiptTransaction = {
+      ...inputTransaction,
+      date: inputTransaction.date instanceof Date ? inputTransaction.date : new Date(inputTransaction.date),
+    };
 
     // Create PDF document in receipt/thermal printer format (narrower than A4)
     const doc = new jsPDF({
@@ -593,15 +634,19 @@ export default function CashierPage() {
     // Transaction details
     doc.setFontSize(8);
     doc.text(`ID Transaksi: ${receiptTransaction.id}`, margin, y);
-    y += 4;
+    y += 4;    // Ensure date is a Date object for PDF generation
+    const transactionDate = receiptTransaction.date instanceof Date 
+      ? receiptTransaction.date 
+      : new Date(receiptTransaction.date);
+    
     doc.text(
-      `Tanggal: ${receiptTransaction.date.toLocaleDateString("id-ID")}`,
+      `Tanggal: ${transactionDate.toLocaleDateString("id-ID")}`,
       margin,
       y
     );
     y += 4;
     doc.text(
-      `Waktu: ${receiptTransaction.date.toLocaleTimeString("id-ID")}`,
+      `Waktu: ${transactionDate.toLocaleTimeString("id-ID")}`,
       margin,
       y
     );
@@ -730,9 +775,10 @@ export default function CashierPage() {
     // Save the PDF
     doc.save(`struk-${receiptTransaction.id}.pdf`);
   };
-
-  const formatDateTime = (date: Date) => {
-    return date.toLocaleDateString("id-ID", {
+  const formatDateTime = (date: Date | string) => {
+    // Ensure date is a Date object
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return dateObj.toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -1711,17 +1757,20 @@ export default function CashierPage() {
                   <div className="flex justify-between">
                     <span>ID Transaksi:</span>
                     <span className="font-mono">{lastTransaction.id}</span>
-                  </div>
-                  <div className="flex justify-between">
+                  </div>                  <div className="flex justify-between">
                     <span>Tanggal:</span>
                     <span>
-                      {lastTransaction.date.toLocaleDateString("id-ID")}
+                      {(lastTransaction.date instanceof Date 
+                        ? lastTransaction.date 
+                        : new Date(lastTransaction.date)).toLocaleDateString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Waktu:</span>
                     <span>
-                      {lastTransaction.date.toLocaleTimeString("id-ID")}
+                      {(lastTransaction.date instanceof Date 
+                        ? lastTransaction.date 
+                        : new Date(lastTransaction.date)).toLocaleTimeString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">

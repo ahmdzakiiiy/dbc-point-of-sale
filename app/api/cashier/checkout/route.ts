@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function POST(req: Request) {
-  try {
+export async function POST(req: Request) {  try {
     const body = await req.json();
+    
+    console.log("Data yang diterima dari client:", body);
 
-    const { items, subtotal, discount, total, cashReceived, change, cashier } =
+    const { items, subtotal, discount, total, cashReceived, change, cashierId, cashierName } =
       body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -14,23 +15,40 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
-
-    // Create transaction record
-    const { data: transaction, error: transactionError } = await supabase
+    
+    // Validasi data
+    if (typeof total !== 'number' || isNaN(total)) {
+      return NextResponse.json(
+        { error: "Total transaksi tidak valid" },
+        { status: 400 }
+      );
+    }    // Create transaction record
+    console.log("Membuat record transaksi dengan total:", total, "discount:", discount?.amount);
+      const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
       .insert({
         total_amount: total,
         discount_amount: discount?.amount || 0,
-        user_id: cashier,
+        user_id: cashierId, // Gunakan UUID user id
       })
       .select()
       .single();
 
     if (transactionError) {
-      throw transactionError;
+      console.error("Error saat membuat transaksi:", transactionError);
+      return NextResponse.json(
+        { error: "Gagal membuat transaksi: " + transactionError.message },
+        { status: 500 }
+      );
     }
-
-    // Create transaction items
+    
+    if (!transaction) {
+      console.error("Transaksi berhasil dibuat tetapi tidak ada data yang dikembalikan");
+      return NextResponse.json(
+        { error: "Gagal mendapatkan data transaksi yang dibuat" },
+        { status: 500 }
+      );
+    }    // Create transaction items
     const transactionItems = items.map((item) => ({
       transaction_id: transaction.id,
       product_id: item.id,
@@ -38,55 +56,87 @@ export async function POST(req: Request) {
       quantity: item.quantity,
       price: item.price,
     }));
+    
+    console.log("Membuat item transaksi:", transactionItems);
 
-    const { error: itemsError } = await supabase
+    const { data: insertedItems, error: itemsError } = await supabase
       .from("transaction_items")
-      .insert(transactionItems);
+      .insert(transactionItems)
+      .select();
 
     if (itemsError) {
-      throw itemsError;
+      console.error("Error saat menambahkan item transaksi:", itemsError);
+      return NextResponse.json(
+        { error: "Gagal menambahkan item transaksi: " + itemsError.message },
+        { status: 500 }
+      );
     }
-
-    // Update product stock for each item
+    
+    console.log("Item transaksi berhasil dibuat:", insertedItems?.length || 0, "item");    // Update product stock for each item
+    let stockUpdateErrors = 0;
+    
     for (const item of items) {
-      // Get current stock
-      const { data: product, error: productError } = await supabase
-        .from("products")
-        .select("stock")
-        .eq("id", item.id)
-        .single();
+      try {
+        console.log(`Memperbarui stok untuk produk ${item.id}, kuantitas: ${item.quantity}`);
+        
+        // Get current stock
+        const { data: product, error: productError } = await supabase
+          .from("products")
+          .select("stock, name")
+          .eq("id", item.id)
+          .single();
 
-      if (productError) {
-        console.error(`Error fetching product ${item.id}:`, productError);
-        continue;
-      }
+        if (productError) {
+          console.error(`Error mengambil data produk ${item.id}:`, productError);
+          stockUpdateErrors++;
+          continue;
+        }
 
-      // Update stock
-      const newStock = product.stock - item.quantity;
+        if (!product) {
+          console.error(`Produk dengan ID ${item.id} tidak ditemukan`);
+          stockUpdateErrors++;
+          continue;
+        }
 
-      if (newStock < 0) {
-        console.warn(
-          `Warning: Stock for product ${item.id} is now negative (${newStock})`
-        );
-      }
+        console.log(`Produk ${product.name} (ID: ${item.id}) stok saat ini: ${product.stock}`);
+        
+        // Update stock
+        const newStock = Math.max(0, product.stock - item.quantity); // Pastikan tidak negatif
 
-      const { error: updateError } = await supabase
-        .from("products")
-        .update({
-          stock: newStock,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", item.id);
+        if (product.stock < item.quantity) {
+          console.warn(
+            `Peringatan: Stok produk ${item.id} (${product.name}) tidak cukup. Meminta: ${item.quantity}, Tersedia: ${product.stock}`
+          );
+        }
 
-      if (updateError) {
-        console.error(
-          `Error updating stock for product ${item.id}:`,
-          updateError
-        );
+        const { data: updatedProduct, error: updateError } = await supabase
+          .from("products")
+          .update({
+            stock: newStock,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("id", item.id)
+          .select();
+
+        if (updateError) {
+          console.error(
+            `Error memperbarui stok untuk produk ${item.id}:`,
+            updateError
+          );
+          stockUpdateErrors++;
+        } else {
+          console.log(`Stok produk ${item.id} berhasil diperbarui menjadi ${newStock}`);
+        }
+      } catch (err) {
+        console.error(`Terjadi kesalahan saat memperbarui stok produk ${item.id}:`, err);
+        stockUpdateErrors++;
       }
     }
-
-    // Return transaction data
+    
+    // Report stock update issues but don't fail the transaction
+    if (stockUpdateErrors > 0) {
+      console.warn(`${stockUpdateErrors} produk gagal diperbarui stoknya.`);
+    }    // Return transaction data
     return NextResponse.json(
       {
         success: true,
@@ -99,7 +149,8 @@ export async function POST(req: Request) {
           total,
           cashReceived,
           change,
-          cashier,
+          cashier: cashierName, // Gunakan nama kasir untuk display
+          cashierId // Juga kembalikan ID untuk referensi
         },
       },
       { status: 201 }

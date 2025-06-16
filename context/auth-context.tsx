@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("username");
         localStorage.removeItem("userId");
-        
+
         // Clear cookies
         document.cookie = "isLoggedIn=; path=/; max-age=0";
         document.cookie = "username=; path=/; max-age=0";

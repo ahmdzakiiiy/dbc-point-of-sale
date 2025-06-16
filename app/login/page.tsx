@@ -90,12 +90,12 @@ export default function LoginPage() {
           localStorage.removeItem("isLoggedIn");
           localStorage.removeItem("username");
           localStorage.removeItem("userId");
-          
+
           // Clear cookies
           document.cookie = "isLoggedIn=; path=/; max-age=0";
           document.cookie = "username=; path=/; max-age=0";
           document.cookie = "userId=; path=/; max-age=0";
-          
+
           setLoginError(
             data.error || "Username atau password salah. Silakan coba lagi."
           );
@@ -106,12 +106,12 @@ export default function LoginPage() {
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("username");
         localStorage.removeItem("userId");
-        
+
         // Clear cookies
         document.cookie = "isLoggedIn=; path=/; max-age=0";
         document.cookie = "username=; path=/; max-age=0";
         document.cookie = "userId=; path=/; max-age=0";
-        
+
         setLoginError("Terjadi kesalahan saat login. Silakan coba lagi.");
       }
     }
