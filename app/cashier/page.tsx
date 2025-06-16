@@ -47,8 +47,10 @@ import {
   Eye,
   Calendar,
   Tag,
+  Loader2,
 } from "lucide-react";
 import DashboardNav from "@/components/dashboard-nav";
+import ProductImagePlaceholder from "@/components/product-image-placeholder";
 
 // Sample product data
 const products = [
@@ -438,7 +440,7 @@ export default function CashierPage() {
 
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
+    const discount = discountApplied ? calculateDiscount() : undefined;
     return Math.max(0, subtotal - discount.amount);
   };
 
