@@ -69,11 +69,10 @@ export default function DashboardNav() {
         <div className="flex items-center gap-2 font-semibold">
           <Package className="h-6 w-6 text-violet-500" />
           <span>Daster Bordir Cantik</span>
-        </div>        <nav className="ml-auto flex items-center gap-4">
-          {navItems.map((item) => (
+        </div>        <nav className="ml-auto flex items-center gap-4">          {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
               <div className={cn(
-                "flex items-center gap-2 py-2 px-1 relative", 
+                "flex items-center gap-2 py-2 px-1 relative font-medium", 
                 "hover:after:w-full after:absolute after:bottom-0 after:left-0 after:h-0.5 after:bg-violet-500",
                 "after:w-0 after:transition-all after:duration-300 after:ease-in-out",
                 pathname === item.href && "after:w-full"
@@ -82,7 +81,7 @@ export default function DashboardNav() {
                 <span className="hidden md:inline-block">{item.name}</span>
               </div>
             </Link>
-          ))}          {/* User Menu */}
+          ))}{/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <div className="p-1 cursor-pointer flex items-center justify-center">
