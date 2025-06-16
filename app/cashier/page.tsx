@@ -52,54 +52,19 @@ import {
 import DashboardNav from "@/components/dashboard-nav";
 import ProductImagePlaceholder from "@/components/product-image-placeholder";
 
-// Sample product data
-const products = [
-  {
-    id: 1,
-    name: "Daster Anaya Pink",
-    stock: 15,
-    price: 120000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 2,
-    name: "Daster Busui Kuning",
-    stock: 8,
-    price: 135000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 3,
-    name: "Gamis Putih",
-    stock: 3,
-    price: 185000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 4,
-    name: "Dress Hitam",
-    stock: 12,
-    price: 150000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 5,
-    name: "Kemeja Navy",
-    stock: 4,
-    price: 110000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 6,
-    name: "Kaftan Coklat",
-    stock: 7,
-    price: 165000,
-    image: "/placeholder.svg",
-  },
-];
+// Product data will be fetched from API
+const initialProducts: Product[] = [];
+
+type Product = {
+  id: string;
+  name: string;
+  stock: number;
+  price: number;
+  image_url?: string;
+};
 
 type CartItem = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -130,8 +95,8 @@ const initialTransactions: Transaction[] = [
     id: "TRX-001234",
     date: new Date(2024, 11, 15, 14, 30),
     items: [
-      { id: 1, name: "Daster Anaya Pink", price: 120000, quantity: 2 },
-      { id: 3, name: "Gamis Putih", price: 185000, quantity: 1 },
+      { id: "1", name: "Daster Anaya Pink", price: 120000, quantity: 2 },
+      { id: "3", name: "Gamis Putih", price: 185000, quantity: 1 },
     ],
     subtotal: 425000,
     discount: { type: "percentage", value: 10, amount: 42500 },
@@ -144,7 +109,7 @@ const initialTransactions: Transaction[] = [
   {
     id: "TRX-001235",
     date: new Date(2024, 11, 15, 15, 45),
-    items: [{ id: 2, name: "Daster Busui Kuning", price: 135000, quantity: 1 }],
+    items: [{ id: "2", name: "Daster Busui Kuning", price: 135000, quantity: 1 }],
     subtotal: 135000,
     total: 135000,
     cashReceived: 150000,
@@ -156,8 +121,8 @@ const initialTransactions: Transaction[] = [
     id: "TRX-001236",
     date: new Date(2024, 11, 15, 16, 20),
     items: [
-      { id: 4, name: "Dress Hitam", price: 150000, quantity: 1 },
-      { id: 5, name: "Kemeja Navy", price: 110000, quantity: 2 },
+      { id: "4", name: "Dress Hitam", price: 150000, quantity: 1 },
+      { id: "5", name: "Kemeja Navy", price: 110000, quantity: 2 },
     ],
     subtotal: 370000,
     discount: { type: "fixed", value: 25000, amount: 25000 },
@@ -170,6 +135,7 @@ const initialTransactions: Transaction[] = [
 ];
 
 export default function CashierPage() {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -183,10 +149,13 @@ export default function CashierPage() {
   );
   const [selectedTransaction, setSelectedTransaction] =
     useState<Transaction | null>(null);
-  const [transactions, setTransactions] =
-    useState<Transaction[]>(initialTransactions);
+  const [transactions, setTransactions] = useState<Transaction[]>(
+    initialTransactions
+  );
   const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("products");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Discount states
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
@@ -409,7 +378,7 @@ export default function CashierPage() {
     }
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       setCart(cart.filter((item) => item.id !== id));
     } else {
@@ -780,7 +749,7 @@ export default function CashierPage() {
                         <div className="aspect-square w-full overflow-hidden bg-gray-100">
                           <Image
                             src={
-                              product.image ||
+                              product.image_url ||
                               "/placeholder.svg?height=150&width=150"
                             }
                             alt={product.name}
