@@ -339,47 +339,45 @@ export default function DashboardPage() {
               </div>
             )}
           </CardContent>
-        </Card>
-
-        {/* Quick Stats Summary */}
+        </Card>        {/* Quick Stats Summary */}
         {salesData.length > 0 && (
-          <div className="grid gap-4 md:grid-cols-3 mt-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Penjualan Tertinggi</CardTitle>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mt-4 sm:mt-6">
+            <Card className="p-2 sm:p-4">
+              <CardHeader className="p-2 pb-1 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Penjualan Tertinggi</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold text-green-600">
+              <CardContent className="p-2">
+                <div className="text-base sm:text-xl font-bold text-green-600">
                   Rp {Math.max(...salesData.map((d) => d.sales || 0)).toLocaleString("id-ID")}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {viewMode === "daily" ? "Hari terbaik bulan ini" : "Bulan terbaik tahun ini"}
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  {viewMode === "daily" ? "Hari terbaik" : "Bulan terbaik"}
                 </p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Transaksi Terbanyak</CardTitle>
+            <Card className="p-2 sm:p-4">
+              <CardHeader className="p-2 pb-1 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Transaksi Terbanyak</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold text-blue-600">
+              <CardContent className="p-2">
+                <div className="text-base sm:text-xl font-bold text-blue-600">
                   {Math.max(...salesData.map((d) => d.transactions || 0))} transaksi
                 </div>
-                <p className="text-xs text-muted-foreground">Volume tertinggi periode ini</p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">Volume tertinggi</p>
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-muted-foreground">Rata-rata Harian</CardTitle>
+            <Card className="p-2 sm:p-4">
+              <CardHeader className="p-2 pb-1 sm:pb-3">
+                <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Rata-rata</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-xl font-bold text-purple-600">
+              <CardContent className="p-2">
+                <div className="text-base sm:text-xl font-bold text-purple-600">
                   Rp {Math.round(totalSales / salesData.length).toLocaleString("id-ID")}
                 </div>
-                <p className="text-xs text-muted-foreground">
-                  {viewMode === "daily" ? "Per hari bulan ini" : "Per bulan tahun ini"}
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  {viewMode === "daily" ? "Per hari" : "Per bulan"}
                 </p>
               </CardContent>
             </Card>
