@@ -9,7 +9,14 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "setup-db": "npx tsx scripts/setup-db.ts",
+    "setup-db-improved": "npx tsx scripts/setup-db-improved.ts",
+    "test-db": "npx tsx scripts/test-connection.ts",
+    "check-tables": "npx tsx scripts/check-tables.ts",
+    "check-admin": "npx tsx scripts/check-admin.ts",
+    "create-tables": "npx tsx scripts/execute-sql.ts",
+    "verify-tables": "npx tsx scripts/verify-tables.ts"
   },
   "dependencies": {
     "@radix-ui/react-accordion": "^1.1.2",
@@ -37,6 +44,7 @@
     "@radix-ui/react-toggle": "^1.0.3",
     "@radix-ui/react-toggle-group": "^1.0.4",
     "@radix-ui/react-tooltip": "^1.0.7",
+    "@supabase/supabase-js": "^2.50.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.0.0",
     "date-fns": "^4.1.0",
@@ -59,6 +67,7 @@
     "eslint-config-next": "14.2.5",
     "postcss": "^8.4.28",
     "tailwindcss": "^3.3.3",
+    "tsx": "^4.20.3",
     "typescript": "^5.1.6"
   }
 }

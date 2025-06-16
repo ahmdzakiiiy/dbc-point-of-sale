@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,66 +42,28 @@ import {
   Search,
   Upload,
   X,
+  Loader2,
 } from "lucide-react";
 import DashboardNav from "@/components/dashboard-nav";
-
-// Initial product data with images
-const initialProducts = [
-  {
-    id: 1,
-    name: "Daster Anaya Pink",
-    stock: 15,
-    price: 120000,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 2,
-    name: "Daster Busui Kuning",
-    stock: 8,
-    price: 135000,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 3,
-    name: "Gamis Putih",
-    stock: 3,
-    price: 185000,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 4,
-    name: "Dress Hitam",
-    stock: 12,
-    price: 150000,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 5,
-    name: "Kemeja Navy",
-    stock: 4,
-    price: 110000,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-  {
-    id: 6,
-    name: "Kaftan Coklat",
-    stock: 7,
-    price: 165000,
-    image: "/placeholder.svg?height=200&width=200",
-  },
-];
+import ProductImagePlaceholder from "@/components/product-image-placeholder";
+import { useAuth } from "@/context/auth-context";
+import { supabase } from "@/lib/supabase";
 
 type Product = {
-  id: number;
+  id: string;
   name: string;
   stock: number;
   price: number;
-  image?: string;
+  image_url?: string;
+  created_at?: string;
+  updated_at?: string;
   formattedPrice?: string;
 };
 
 export default function StockPage() {
-  const [products, setProducts] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -116,9 +78,35 @@ export default function StockPage() {
     stock: 0,
     price: 0,
     formattedPrice: "",
-    image: "",
+    image_url: "",
   });
   const [imagePreview, setImagePreview] = useState<string>("");
+  const [processing, setProcessing] = useState(false);
+  const { user } = useAuth();
+  
+  // Fetch products from API
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/products');
+          if (!response.ok) {
+          throw new Error('Gagal mengambil data produk');
+        }
+        
+        const data = await response.json();
+        setProducts(data.products || []);
+        setError(null);
+      } catch (err) {
+        console.error('Error mengambil data produk:', err);
+        setError('Gagal memuat data produk. Silakan coba lagi.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProducts();
+  }, []);
 
   // Format price with thousands separator
   const formatPrice = (price: number | string): string => {
@@ -161,77 +149,209 @@ export default function StockPage() {
       e.preventDefault();
     }
   };
-
-  const handleImageUpload = (
+  const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     isEdit = false
   ) => {
     const file = event.target.files?.[0];
     if (file) {
+      // For preview
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
         setImagePreview(imageUrl);
-
-        if (isEdit && currentProduct) {
-          setCurrentProduct({ ...currentProduct, image: imageUrl });
-        } else {
-          setNewProduct({ ...newProduct, image: imageUrl });
-        }
       };
       reader.readAsDataURL(file);
-    }
-  };
-  const handleAddProduct = () => {
-    const id = Math.max(0, ...products.map((p) => p.id)) + 1;
-    const { formattedPrice, ...productData } = newProduct;
-    setProducts([...products, { id, ...productData }]);
-    setNewProduct({
-      name: "",
-      stock: 0,
-      price: 0,
-      formattedPrice: "",
-      image: "",
-    });
-    setImagePreview("");
-    setIsAddModalOpen(false);
-  };
-
-  const handleEditProduct = () => {
-    if (currentProduct) {
-      setProducts(
-        products.map((p) => (p.id === currentProduct.id ? currentProduct : p))
-      );
-      setIsEditModalOpen(false);
-      setImagePreview("");
-    }
-  };
-
-  const handleDeleteProduct = () => {
-    if (currentProduct) {
-      setProducts(products.filter((p) => p.id !== currentProduct.id));
-      setIsDeleteAlertOpen(false);
-    }
-  };
-
-  const handleAddStock = () => {
-    if (currentProduct && addStockQuantity) {
-      const quantityToAdd = Number.parseInt(addStockQuantity);
-      if (quantityToAdd > 0) {
-        setProducts(
-          products.map((p) =>
-            p.id === currentProduct.id
-              ? { ...p, stock: p.stock + quantityToAdd }
-              : p
-          )
-        );
-        setIsAddStockModalOpen(false);
-        setAddStockQuantity("");
-        setCurrentProduct(null);
+      
+      try {
+        // Convert to base64 string for storage
+        const base64String = await convertFileToBase64(file);
+        
+        if (isEdit && currentProduct) {
+          setCurrentProduct({ ...currentProduct, image_url: base64String });
+        } else {
+          setNewProduct({ ...newProduct, image_url: base64String });
+        }
+      } catch (err) {
+        console.error('Error processing image:', err);
+        alert('Gagal memproses gambar. Silakan coba lagi.');
       }
     }
   };
-  const openEditModal = (product: Product) => {
+  
+  // Convert file to base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };  const handleAddProduct = async () => {
+    try {
+      setProcessing(true);
+      const { formattedPrice, ...productData } = newProduct;
+      
+      // Convert to proper types and format
+      const productToAdd = {
+        name: productData.name,
+        stock: Number(productData.stock),
+        price: Number(getNumericValue(formattedPrice)),
+        image_url: productData.image_url,
+      };
+      
+      // Send to API
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productToAdd),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Gagal menambahkan produk');
+      }
+      
+      const { product } = await response.json();
+      
+      // Update products state with new product
+      setProducts([...products, product]);
+      
+      // Reset form
+      setNewProduct({
+        name: "",
+        stock: 0,
+        price: 0,
+        formattedPrice: "",
+        image_url: "",
+      });
+      setImagePreview("");
+      setIsAddModalOpen(false);
+    } catch (err) {
+      console.error('Error adding product:', err);
+      alert('Gagal menambahkan produk. Silakan coba lagi.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+  const handleEditProduct = async () => {
+    if (!currentProduct) return;
+    
+    try {
+      setProcessing(true);
+      
+      // Prepare data for API
+      const productToUpdate = {
+        name: currentProduct.name,
+        stock: Number(currentProduct.stock),
+        price: Number(typeof currentProduct.price === 'string' 
+          ? getNumericValue(currentProduct.price) 
+          : currentProduct.price),
+        image_url: currentProduct.image_url
+      };
+      
+      // Send to API
+      const response = await fetch(`/api/products/${currentProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productToUpdate),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Gagal mengubah produk');
+      }
+      
+      const { product } = await response.json();
+      
+      // Update products state
+      setProducts(products.map((p) => (p.id === currentProduct.id ? product : p)));
+      setIsEditModalOpen(false);
+      setImagePreview("");
+    } catch (err) {
+      console.error('Error updating product:', err);
+      alert('Gagal mengubah produk. Silakan coba lagi.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!currentProduct) return;
+    
+    try {
+      setProcessing(true);
+      
+      // Send delete request to API
+      const response = await fetch(`/api/products/${currentProduct.id}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Gagal menghapus produk');
+      }
+      
+      // Remove from products state
+      setProducts(products.filter((p) => p.id !== currentProduct.id));
+      setIsDeleteAlertOpen(false);
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      alert('Gagal menghapus produk. Silakan coba lagi.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+  const handleAddStock = async () => {
+    if (!currentProduct || !addStockQuantity) return;
+    
+    try {
+      setProcessing(true);
+      const quantityToAdd = Number.parseInt(addStockQuantity);
+      
+      if (quantityToAdd <= 0) {
+        alert('Silakan masukkan jumlah yang valid');
+        return;
+      }
+      
+      // Get current product data
+      const newStock = currentProduct.stock + quantityToAdd;
+      
+      // Prepare data for API
+      const productToUpdate = {
+        ...currentProduct,
+        stock: newStock
+      };
+      
+      // Send to API
+      const response = await fetch(`/api/products/${currentProduct.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(productToUpdate),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Gagal mengubah stok');
+      }
+      
+      const { product } = await response.json();
+      
+      // Update products state
+      setProducts(products.map((p) => (p.id === currentProduct.id ? product : p)));
+      
+      setIsAddStockModalOpen(false);
+      setAddStockQuantity("");
+      setCurrentProduct(null);
+    } catch (err) {
+      console.error('Error adding stock:', err);
+      alert('Gagal mengubah stok. Silakan coba lagi.');
+    } finally {
+      setProcessing(false);
+    }
+  };  const openEditModal = (product: Product) => {
     const productWithFormattedPrice = {
       ...product,
       formattedPrice: formatPrice(product.price),
@@ -239,7 +359,7 @@ export default function StockPage() {
     setCurrentProduct(
       productWithFormattedPrice as Product & { formattedPrice: string }
     );
-    setImagePreview(product.image || "");
+    setImagePreview(product.image_url || "");
     setIsEditModalOpen(true);
   };
 
@@ -256,15 +376,15 @@ export default function StockPage() {
   const removeImage = (isEdit = false) => {
     setImagePreview("");
     if (isEdit && currentProduct) {
-      setCurrentProduct({ ...currentProduct, image: "" });
+      setCurrentProduct({ ...currentProduct, image_url: "" });
     } else {
-      setNewProduct({ ...newProduct, image: "" });
+      setNewProduct({ ...newProduct, image_url: "" });
     }
   };
-
   return (
     <div className="flex min-h-screen flex-col">
-      <DashboardNav />      <main className="flex-1 p-3 sm:p-4 md:p-6">
+      <DashboardNav />{" "}
+      <main className="flex-1 p-3 sm:p-4 md:p-6">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-3 sm:mb-4 md:mb-6 gap-2 sm:gap-3 md:gap-4">
           <h1 className="text-xl sm:text-2xl font-bold">Manajemen Stok</h1>
           <div className="flex flex-col md:flex-row gap-2 sm:gap-3 md:gap-4 w-full md:w-auto">
@@ -282,112 +402,143 @@ export default function StockPage() {
               onClick={() => setIsAddModalOpen(true)}
               className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10"
             >
-              <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Tambah Produk
+              <Plus className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> Tambah
+              Produk
             </Button>
           </div>
         </div>
 
         <Card className="p-2 sm:p-3 md:p-4 shadow-sm">
           <CardHeader className="p-2 sm:p-4">
-            <CardTitle className="text-sm sm:text-base md:text-lg">Daftar Produk</CardTitle>
-          </CardHeader>
-          <CardContent className="p-1 sm:p-2 md:p-4">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Gambar</TableHead>
-                  <TableHead>Nama Produk</TableHead>
-                  <TableHead className="text-center">Stok</TableHead>
-                  <TableHead className="text-center">Harga</TableHead>
-                  <TableHead className="text-center">Aksi</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredProducts.map((product) => (
-                  <TableRow key={product.id}>
-                    <TableCell>
-                      <div className="w-16 h-16 overflow-hidden rounded-md bg-gray-100">
-                        <Image
-                          src={
-                            product.image ||
-                            "/placeholder.svg?height=64&width=64"
-                          }
-                          alt={product.name}
-                          width={64}
-                          height={64}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      {product.name}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span
-                        className={
-                          product.stock < 5 ? "text-red-500 font-medium" : ""
-                        }
-                      >
-                        {product.stock}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      Rp {product.price.toLocaleString("id-ID")}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex justify-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openAddStockModal(product)}
-                          className="text-green-600 hover:text-green-700 hover:bg-green-50"
-                          title="Tambah Stok"
-                        >
-                          <PackagePlus className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openEditModal(product)}
-                          title="Edit Produk"
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openDeleteAlert(product)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          title="Hapus Produk"
-                        >
-                          <Trash className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {filteredProducts.length === 0 && (
+            <CardTitle className="text-sm sm:text-base md:text-lg">
+              Daftar Produk
+            </CardTitle>
+          </CardHeader>          <CardContent className="p-1 sm:p-2 md:p-4">
+            {loading ? (
+              <div className="flex justify-center items-center p-8">                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+                <span className="ml-2">Memuat produk...</span>
+              </div>
+            ) : error ? (
+              <div className="text-center text-red-500 p-8">
+                {error}
+                <Button 
+                  variant="outline" 
+                  className="ml-2"
+                  onClick={() => window.location.reload()}
+                >
+                  Coba Lagi
+                </Button>
+              </div>            ) : filteredProducts.length === 0 ? (
+              <div className="text-center p-8 text-gray-500">
+                {searchTerm ? "Tidak ada produk yang cocok dengan pencarian Anda" : "Belum ada produk tersedia. Tambahkan produk pertama Anda!"}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      className="text-center py-8 text-muted-foreground"
-                    >
-                      {searchTerm
-                        ? "Tidak ada produk yang ditemukan"
-                        : "Belum ada produk"}
-                    </TableCell>
+                    <TableHead>Gambar</TableHead>
+                    <TableHead>Nama Produk</TableHead>
+                    <TableHead className="text-center">Stok</TableHead>
+                    <TableHead className="text-center">Harga</TableHead>
+                    <TableHead className="text-center">Aksi</TableHead>
                   </TableRow>
-                )}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredProducts.map((product) => (
+                    <TableRow key={product.id}>
+                      <TableCell>
+                        <div className="w-16 h-16 overflow-hidden rounded-md bg-gray-100">
+                          {product.image_url ? (
+                            <Image
+                              src={product.image_url}
+                              alt={product.name}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <ProductImagePlaceholder size={64} />
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {product.name}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span
+                          className={
+                            product.stock < 5 ? "text-red-500 font-medium" : ""
+                          }
+                        >
+                          {product.stock}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-center">
+                        Rp {formatPrice(product.price)}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex justify-center gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openAddStockModal(product)}
+                            className="text-green-600 hover:text-green-700 hover:bg-green-50"
+                            title="Tambah Stok"
+                            disabled={processing}
+                          >
+                            <PackagePlus className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openEditModal(product)}
+                            title="Edit Produk"
+                            disabled={processing}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openDeleteAlert(product)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            title="Hapus Produk"
+                            disabled={processing}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {filteredProducts.length === 0 && (
+                    <TableRow>
+                      <TableCell
+                        colSpan={5}
+                        className="text-center py-8 text-muted-foreground"
+                      >
+                        {searchTerm
+                          ? "Tidak ada produk yang ditemukan"
+                          : "Belum ada produk"}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
 
         {/* Delete Product Alert */}
-        <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialog
+          open={isDeleteAlertOpen}
+          onOpenChange={setIsDeleteAlertOpen}
+        >
           <AlertDialogContent className="max-w-sm">
             <AlertDialogHeader>
-              <AlertDialogTitle className="text-sm sm:text-base md:text-lg">Hapus Produk</AlertDialogTitle>
+              <AlertDialogTitle className="text-sm sm:text-base md:text-lg">
+                Hapus Produk
+              </AlertDialogTitle>
               <AlertDialogDescription className="text-xs sm:text-sm">
                 Apakah Anda yakin ingin menghapus produk{" "}
                 <span className="font-medium">{currentProduct?.name}</span>?
@@ -395,7 +546,9 @@ export default function StockPage() {
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter className="mt-2 sm:mt-4">
-              <AlertDialogCancel className="text-xs sm:text-sm h-8 sm:h-10">Batal</AlertDialogCancel>
+              <AlertDialogCancel className="text-xs sm:text-sm h-8 sm:h-10">
+                Batal
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={handleDeleteProduct}
                 className="bg-red-500 hover:bg-red-600 text-xs sm:text-sm h-8 sm:h-10"
@@ -413,7 +566,9 @@ export default function StockPage() {
         >
           <DialogContent className="max-w-sm">
             <DialogHeader className="p-2 sm:p-4">
-              <DialogTitle className="text-sm sm:text-base md:text-lg">Tambah Stok</DialogTitle>
+              <DialogTitle className="text-sm sm:text-base md:text-lg">
+                Tambah Stok
+              </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Tambah stok untuk produk:{" "}
                 <span className="font-medium">{currentProduct?.name}</span>
@@ -429,7 +584,10 @@ export default function StockPage() {
                 </div>
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="add-stock-quantity" className="text-xs sm:text-sm">
+                <Label
+                  htmlFor="add-stock-quantity"
+                  className="text-xs sm:text-sm"
+                >
                   Jumlah Stok yang Ditambahkan
                 </Label>{" "}
                 <Input
@@ -479,14 +637,18 @@ export default function StockPage() {
         <Dialog open={isAddModalOpen} onOpenChange={setIsAddModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader className="p-2 sm:p-4">
-              <DialogTitle className="text-sm sm:text-base md:text-lg">Tambah Produk Baru</DialogTitle>
+              <DialogTitle className="text-sm sm:text-base md:text-lg">
+                Tambah Produk Baru
+              </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Masukkan detail produk baru di bawah ini.
               </DialogDescription>
             </DialogHeader>
             <div className="space-y-2 sm:space-y-4">
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="product-image" className="text-xs sm:text-sm">Gambar Produk</Label>
+                <Label htmlFor="product-image" className="text-xs sm:text-sm">
+                  Gambar Produk
+                </Label>
                 <div className="space-y-2">
                   {imagePreview ? (
                     <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto">
@@ -522,7 +684,9 @@ export default function StockPage() {
                 </div>
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="name" className="text-xs sm:text-sm">Nama Produk</Label>
+                <Label htmlFor="name" className="text-xs sm:text-sm">
+                  Nama Produk
+                </Label>
                 <Input
                   id="name"
                   placeholder="Nama produk"
@@ -533,7 +697,9 @@ export default function StockPage() {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="stock" className="text-xs sm:text-sm">Stok Awal</Label>
+                <Label htmlFor="stock" className="text-xs sm:text-sm">
+                  Stok Awal
+                </Label>
                 <Input
                   id="stock"
                   type="number"
@@ -550,7 +716,9 @@ export default function StockPage() {
                 />
               </div>
               <div className="space-y-1 sm:space-y-2">
-                <Label htmlFor="price" className="text-xs sm:text-sm">Harga (Rp)</Label>
+                <Label htmlFor="price" className="text-xs sm:text-sm">
+                  Harga (Rp)
+                </Label>
                 <Input
                   id="price"
                   placeholder="Harga produk"
@@ -590,7 +758,9 @@ export default function StockPage() {
         <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
           <DialogContent className="max-w-md">
             <DialogHeader className="p-2 sm:p-4">
-              <DialogTitle className="text-sm sm:text-base md:text-lg">Edit Produk</DialogTitle>
+              <DialogTitle className="text-sm sm:text-base md:text-lg">
+                Edit Produk
+              </DialogTitle>
               <DialogDescription className="text-xs sm:text-sm">
                 Edit detail produk di bawah ini.
               </DialogDescription>
@@ -598,7 +768,12 @@ export default function StockPage() {
             {currentProduct && (
               <div className="space-y-2 sm:space-y-4">
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-product-image" className="text-xs sm:text-sm">Gambar Produk</Label>
+                  <Label
+                    htmlFor="edit-product-image"
+                    className="text-xs sm:text-sm"
+                  >
+                    Gambar Produk
+                  </Label>
                   <div className="space-y-2">
                     {imagePreview ? (
                       <div className="relative w-24 h-24 sm:w-32 sm:h-32 mx-auto">
@@ -634,7 +809,9 @@ export default function StockPage() {
                   </div>
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-name" className="text-xs sm:text-sm">Nama Produk</Label>
+                  <Label htmlFor="edit-name" className="text-xs sm:text-sm">
+                    Nama Produk
+                  </Label>
                   <Input
                     id="edit-name"
                     placeholder="Nama produk"
@@ -647,7 +824,9 @@ export default function StockPage() {
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-stock" className="text-xs sm:text-sm">Stok</Label>
+                  <Label htmlFor="edit-stock" className="text-xs sm:text-sm">
+                    Stok
+                  </Label>
                   <Input
                     id="edit-stock"
                     type="number"
@@ -664,11 +843,16 @@ export default function StockPage() {
                   />
                 </div>
                 <div className="space-y-1 sm:space-y-2">
-                  <Label htmlFor="edit-price" className="text-xs sm:text-sm">Harga (Rp)</Label>
+                  <Label htmlFor="edit-price" className="text-xs sm:text-sm">
+                    Harga (Rp)
+                  </Label>
                   <Input
                     id="edit-price"
                     placeholder="Harga produk"
-                    value={(currentProduct as any).formattedPrice || formatPrice(currentProduct.price)}
+                    value={
+                      (currentProduct as any).formattedPrice ||
+                      formatPrice(currentProduct.price)
+                    }
                     onChange={(e) => {
                       const formattedPrice = formatPrice(e.target.value);
                       setCurrentProduct({
@@ -692,7 +876,9 @@ export default function StockPage() {
               </Button>
               <Button
                 onClick={handleEditProduct}
-                disabled={!currentProduct?.name || (currentProduct?.price || 0) <= 0}
+                disabled={
+                  !currentProduct?.name || (currentProduct?.price || 0) <= 0
+                }
                 className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10"
               >
                 Simpan
