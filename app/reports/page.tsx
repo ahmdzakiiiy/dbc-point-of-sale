@@ -370,13 +370,13 @@ export default function ReportsPage() {
                     <TableHead className="text-xs sm:text-sm">
                       ID Transaksi
                     </TableHead>
-                    <TableHead className="text-xs sm:text-sm">
+                    <TableHead className="text-xs sm:text-sm text-center">
                       Tanggal
                     </TableHead>
                     <TableHead className="text-xs sm:text-sm text-right">
                       Diskon
                     </TableHead>
-                    <TableHead className="text-xs sm:text-sm text-right">
+                    <TableHead className="text-xs sm:text-sm text-center">
                       Total
                     </TableHead>
                   </TableRow>
