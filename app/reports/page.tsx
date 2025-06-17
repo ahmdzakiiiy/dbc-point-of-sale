@@ -413,8 +413,7 @@ export default function ReportsPage() {
                       <TableRow key={transaction.id}>
                         <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
                           {transaction.id.substring(0, 8)}...
-                        </TableCell>
-                        <TableCell className="text-xs sm:text-sm py-2 sm:py-4">
+                        </TableCell>                        <TableCell className="text-xs sm:text-sm py-2 sm:py-4 text-center">
                           {formatDate(transaction.date)}
                         </TableCell>
                         <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
@@ -536,8 +535,7 @@ export default function ReportsPage() {
                             </TableHead>
                             <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                               ID Transaksi
-                            </TableHead>
-                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4">
+                            </TableHead>                            <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4 text-center">
                               Tanggal
                             </TableHead>
                             <TableHead className="font-semibold text-xs sm:text-sm p-1 sm:p-3 md:p-4 text-right">
@@ -556,8 +554,7 @@ export default function ReportsPage() {
                               </TableCell>
                               <TableCell className="font-mono text-xs sm:text-sm p-1 sm:p-3 md:p-4">
                                 {transaction.id}
-                              </TableCell>
-                              <TableCell className="text-xs sm:text-sm p-1 sm:p-3 md:p-4">
+                              </TableCell>                              <TableCell className="text-xs sm:text-sm p-1 sm:p-3 md:p-4 text-center">
                                 {formatDate(transaction.date)}
                               </TableCell>
                               <TableCell className="text-right text-xs sm:text-sm p-1 sm:p-3 md:p-4">
