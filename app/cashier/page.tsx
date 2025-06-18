@@ -113,6 +113,7 @@ export default function CashierPage() {
   const [activeTab, setActiveTab] = useState("products");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatedProductIds, setUpdatedProductIds] = useState<string[]>([]);
 
   // Discount states
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
@@ -391,7 +392,6 @@ export default function CashierPage() {
       e.preventDefault();
     }
   };
-
   const addToCart = (product: (typeof products)[0]) => {
     const existingItem = cart.find((item) => item.id === product.id);
 
@@ -415,11 +415,12 @@ export default function CashierPage() {
       ]);
     }
   };
-
   const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
+      // Remove item from cart
       setCart(cart.filter((item) => item.id !== id));
     } else {
+      // Update quantity
       setCart(
         cart.map((item) => (item.id === id ? { ...item, quantity } : item))
       );
@@ -473,22 +474,26 @@ export default function CashierPage() {
     setDiscountType("percentage");
     setDiscountValue("");
     setDiscountApplied(false);
-  };  const handlePayment = async () => {
+  };
+  const handlePayment = async () => {
     setIsProcessing(true);
 
-    try {      const subtotal = calculateSubtotal();
+    try {
+      const subtotal = calculateSubtotal();
       // Pastikan discount selalu memiliki format yang konsisten untuk server
-      const discount = discountApplied ? calculateDiscount() : { type: "fixed", value: 0, amount: 0 };
+      const discount = discountApplied
+        ? calculateDiscount()
+        : { type: "fixed", value: 0, amount: 0 };
       const total = calculateTotal();
       const cashAmountValue = getNumericValue(cashAmount);
       const change = cashAmountValue - total;
       // Gunakan userId (UUID) alih-alih username untuk foreign key
       const cashierId = localStorage.getItem("userId");
       const cashierName = localStorage.getItem("username") || "Admin";
-      
+
       if (!cashierId) {
         throw new Error("User ID tidak ditemukan. Silakan login kembali.");
-      }      // Log transaksi ke konsol untuk debug
+      } // Log transaksi ke konsol untuk debug
       console.log("Mengirim data transaksi:", {
         items: cart,
         subtotal,
@@ -497,7 +502,7 @@ export default function CashierPage() {
         cashReceived: cashAmountValue,
         change,
         cashierId,
-        cashierName
+        cashierName,
       });
 
       // Send transaction data to API
@@ -507,11 +512,11 @@ export default function CashierPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          items: cart.map(item => ({
+          items: cart.map((item) => ({
             id: item.id,
             name: item.name,
             price: item.price,
-            quantity: item.quantity
+            quantity: item.quantity,
           })),
           subtotal,
           discount,
@@ -519,22 +524,21 @@ export default function CashierPage() {
           cashReceived: cashAmountValue,
           change,
           cashierId, // Kirim ID (UUID)
-          cashierName // Kirim nama untuk tampilan
+          cashierName, // Kirim nama untuk tampilan
         }),
-      });      // Log response untuk debug
+      }); // Log response untuk debug
       console.log("Status response:", response.status);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
         console.error("Error dari server:", errorData);
         throw new Error(errorData.error || "Gagal memproses pembayaran");
-      }      const result = await response.json();
-      console.log("Data transaksi dari server:", result);
-
-      // Convert string date to Date object
+      }
+      const result = await response.json();
+      console.log("Data transaksi dari server:", result); // Convert string date to Date object
       const transactionWithDateObj = {
         ...result.transaction,
-        date: new Date(result.transaction.date) // Konversi string date ke objek Date
+        date: new Date(result.transaction.date), // Konversi string date ke objek Date
       };
 
       // Use the transaction data returned from API with proper date object
@@ -542,6 +546,63 @@ export default function CashierPage() {
 
       // Update local transactions list with the new transaction with proper date object
       setTransactions((prev) => [transactionWithDateObj, ...prev]);
+
+      console.log(
+        "✅ Transaksi berhasil disimpan dengan ID:",
+        transactionWithDateObj.id
+      );
+
+      // Update products stock if API returned updated products
+      if (
+        result.updatedProducts &&
+        Array.isArray(result.updatedProducts) &&
+        result.updatedProducts.length > 0
+      ) {
+        console.log(
+          "Memperbarui stok produk dengan data terbaru:",
+          result.updatedProducts
+        ); // Track which product IDs were updated
+        const updatedIds: string[] = [];
+
+        // Update the products state with updated stock values
+        setProducts((prevProducts) => {
+          const updatedProductsState = prevProducts.map((product) => {
+            // Find the matching updated product
+            const updatedProduct = result.updatedProducts.find(
+              (p: any) => p.id === product.id
+            );
+
+            // If found, return product with updated stock, otherwise return unchanged
+            if (updatedProduct) {
+              console.log(
+                `Produk ${product.name} (${product.id}): stok lama=${product.stock}, stok baru=${updatedProduct.stock}`
+              );
+
+              // Add to list of updated product IDs
+              updatedIds.push(product.id);
+
+              return { ...product, stock: updatedProduct.stock };
+            } else {
+              return product;
+            }
+          });
+          console.log("Stok produk telah diperbarui setelah transaksi");
+          return updatedProductsState;
+        });
+
+        // Set the updated product IDs to enable visual highlighting
+        setUpdatedProductIds(updatedIds);
+
+        // Switch to products tab to show updated stock
+        setActiveTab("products");
+
+        // Clear the highlighted products after a delay
+        setTimeout(() => {
+          setUpdatedProductIds([]);
+        }, 3000); // Highlight for 3 seconds
+      } else {
+        console.warn("Tidak ada data produk yang diperbarui dari server");
+      }
 
       // Reset form
       setCart([]);
@@ -561,7 +622,10 @@ export default function CashierPage() {
     // Convert date to Date object if it's a string
     const transactionWithDateObj = {
       ...transaction,
-      date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date),
+      date:
+        transaction.date instanceof Date
+          ? transaction.date
+          : new Date(transaction.date),
     };
     setSelectedTransaction(transactionWithDateObj);
     setTransactionDetailModalOpen(true);
@@ -570,18 +634,25 @@ export default function CashierPage() {
     // Convert date to Date object if it's a string
     const transactionWithDateObj = {
       ...transaction,
-      date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date),
+      date:
+        transaction.date instanceof Date
+          ? transaction.date
+          : new Date(transaction.date),
     };
     setLastTransaction(transactionWithDateObj);
     setReceiptModalOpen(true);
-  };  const downloadReceipt = (transaction?: Transaction) => {
+  };
+  const downloadReceipt = (transaction?: Transaction) => {
     const inputTransaction = transaction || lastTransaction;
     if (!inputTransaction) return;
-    
+
     // Ensure date is a Date object
     const receiptTransaction = {
       ...inputTransaction,
-      date: inputTransaction.date instanceof Date ? inputTransaction.date : new Date(inputTransaction.date),
+      date:
+        inputTransaction.date instanceof Date
+          ? inputTransaction.date
+          : new Date(inputTransaction.date),
     };
 
     // Create PDF document in receipt/thermal printer format (narrower than A4)
@@ -638,11 +709,12 @@ export default function CashierPage() {
     // Transaction details
     doc.setFontSize(8);
     doc.text(`ID Transaksi: ${receiptTransaction.id}`, margin, y);
-    y += 4;    // Ensure date is a Date object for PDF generation
-    const transactionDate = receiptTransaction.date instanceof Date 
-      ? receiptTransaction.date 
-      : new Date(receiptTransaction.date);
-    
+    y += 4; // Ensure date is a Date object for PDF generation
+    const transactionDate =
+      receiptTransaction.date instanceof Date
+        ? receiptTransaction.date
+        : new Date(receiptTransaction.date);
+
     doc.text(
       `Tanggal: ${transactionDate.toLocaleDateString("id-ID")}`,
       margin,
@@ -798,6 +870,11 @@ export default function CashierPage() {
     hour: "2-digit",
     minute: "2-digit",
   });
+  // Fungsi yang akan digunakan untuk memeriksa apakah produk tersedia
+  const isProductAvailable = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    return product && product.stock > 0;
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -831,7 +908,8 @@ export default function CashierPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                </div>                {/* Product grid layout - 2 columns on mobile, 3 on larger screens */}{" "}
+                </div>{" "}
+                {/* Product grid layout - 2 columns on mobile, 3 on larger screens */}{" "}
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {isLoading ? (
                     // Loading state - show 6 loading placeholders
@@ -873,7 +951,12 @@ export default function CashierPage() {
                     filteredProducts.map((product) => (
                       <Card
                         key={product.id}
-                        className="overflow-hidden flex flex-col h-full"
+                        className={`overflow-hidden flex flex-col h-full transition-all duration-500 
+                          ${
+                            updatedProductIds.includes(product.id)
+                              ? "ring-2 ring-violet-500 shadow-lg scale-[1.02]"
+                              : ""
+                          }`}
                       >
                         {/* Product Image */}
                         <CardHeader className="p-0">
@@ -903,7 +986,7 @@ export default function CashierPage() {
                               <div className="flex items-center gap-1">
                                 <span className="text-xs text-muted-foreground">
                                   Stok:
-                                </span>
+                                </span>{" "}
                                 <span
                                   className={`text-xs font-medium ${
                                     product.stock < 5
@@ -924,6 +1007,7 @@ export default function CashierPage() {
 
                         {/* Add Button */}
                         <CardFooter className="p-3 pt-0">
+                          {" "}
                           <Button
                             onClick={() => addToCart(product)}
                             className="w-full bg-violet-500 hover:bg-violet-600 text-sm py-2"
@@ -1760,20 +1844,23 @@ export default function CashierPage() {
                   <div className="flex justify-between">
                     <span>ID Transaksi:</span>
                     <span className="font-mono">{lastTransaction.id}</span>
-                  </div>                  <div className="flex justify-between">
+                  </div>{" "}
+                  <div className="flex justify-between">
                     <span>Tanggal:</span>
                     <span>
-                      {(lastTransaction.date instanceof Date 
-                        ? lastTransaction.date 
-                        : new Date(lastTransaction.date)).toLocaleDateString("id-ID")}
+                      {(lastTransaction.date instanceof Date
+                        ? lastTransaction.date
+                        : new Date(lastTransaction.date)
+                      ).toLocaleDateString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Waktu:</span>
                     <span>
-                      {(lastTransaction.date instanceof Date 
-                        ? lastTransaction.date 
-                        : new Date(lastTransaction.date)).toLocaleTimeString("id-ID")}
+                      {(lastTransaction.date instanceof Date
+                        ? lastTransaction.date
+                        : new Date(lastTransaction.date)
+                      ).toLocaleTimeString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">
