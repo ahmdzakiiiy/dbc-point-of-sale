@@ -1,13 +1,22 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-export async function POST(req: Request) {  try {
+export async function POST(req: Request) {
+  try {
     const body = await req.json();
-    
+
     console.log("Data yang diterima dari client:", body);
 
-    const { items, subtotal, discount, total, cashReceived, change, cashierId, cashierName } =
-      body;
+    const {
+      items,
+      subtotal,
+      discount,
+      total,
+      cashReceived,
+      change,
+      cashierId,
+      cashierName,
+    } = body;
 
     if (!items || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json(
@@ -15,16 +24,21 @@ export async function POST(req: Request) {  try {
         { status: 400 }
       );
     }
-    
+
     // Validasi data
-    if (typeof total !== 'number' || isNaN(total)) {
+    if (typeof total !== "number" || isNaN(total)) {
       return NextResponse.json(
         { error: "Total transaksi tidak valid" },
         { status: 400 }
       );
-    }    // Create transaction record
-    console.log("Membuat record transaksi dengan total:", total, "discount:", discount?.amount);
-      const { data: transaction, error: transactionError } = await supabase
+    } // Create transaction record
+    console.log(
+      "Membuat record transaksi dengan total:",
+      total,
+      "discount:",
+      discount?.amount
+    );
+    const { data: transaction, error: transactionError } = await supabase
       .from("transactions")
       .insert({
         total_amount: total,
@@ -41,14 +55,16 @@ export async function POST(req: Request) {  try {
         { status: 500 }
       );
     }
-    
+
     if (!transaction) {
-      console.error("Transaksi berhasil dibuat tetapi tidak ada data yang dikembalikan");
+      console.error(
+        "Transaksi berhasil dibuat tetapi tidak ada data yang dikembalikan"
+      );
       return NextResponse.json(
         { error: "Gagal mendapatkan data transaksi yang dibuat" },
         { status: 500 }
       );
-    }    // Create transaction items
+    } // Create transaction items
     const transactionItems = items.map((item) => ({
       transaction_id: transaction.id,
       product_id: item.id,
@@ -56,7 +72,7 @@ export async function POST(req: Request) {  try {
       quantity: item.quantity,
       price: item.price,
     }));
-    
+
     console.log("Membuat item transaksi:", transactionItems);
 
     const { data: insertedItems, error: itemsError } = await supabase
@@ -71,14 +87,20 @@ export async function POST(req: Request) {  try {
         { status: 500 }
       );
     }
-    
-    console.log("Item transaksi berhasil dibuat:", insertedItems?.length || 0, "item");    // Update product stock for each item
+
+    console.log(
+      "Item transaksi berhasil dibuat:",
+      insertedItems?.length || 0,
+      "item"
+    ); // Update product stock for each item
     let stockUpdateErrors = 0;
-    
+
     for (const item of items) {
       try {
-        console.log(`Memperbarui stok untuk produk ${item.id}, kuantitas: ${item.quantity}`);
-        
+        console.log(
+          `Memperbarui stok untuk produk ${item.id}, kuantitas: ${item.quantity}`
+        );
+
         // Get current stock
         const { data: product, error: productError } = await supabase
           .from("products")
@@ -87,7 +109,10 @@ export async function POST(req: Request) {  try {
           .single();
 
         if (productError) {
-          console.error(`Error mengambil data produk ${item.id}:`, productError);
+          console.error(
+            `Error mengambil data produk ${item.id}:`,
+            productError
+          );
           stockUpdateErrors++;
           continue;
         }
@@ -98,8 +123,10 @@ export async function POST(req: Request) {  try {
           continue;
         }
 
-        console.log(`Produk ${product.name} (ID: ${item.id}) stok saat ini: ${product.stock}`);
-        
+        console.log(
+          `Produk ${product.name} (ID: ${item.id}) stok saat ini: ${product.stock}`
+        );
+
         // Update stock
         const newStock = Math.max(0, product.stock - item.quantity); // Pastikan tidak negatif
 
@@ -125,18 +152,47 @@ export async function POST(req: Request) {  try {
           );
           stockUpdateErrors++;
         } else {
-          console.log(`Stok produk ${item.id} berhasil diperbarui menjadi ${newStock}`);
+          console.log(
+            `Stok produk ${item.id} berhasil diperbarui menjadi ${newStock}`
+          );
         }
       } catch (err) {
-        console.error(`Terjadi kesalahan saat memperbarui stok produk ${item.id}:`, err);
+        console.error(
+          `Terjadi kesalahan saat memperbarui stok produk ${item.id}:`,
+          err
+        );
         stockUpdateErrors++;
       }
     }
-    
+
     // Report stock update issues but don't fail the transaction
     if (stockUpdateErrors > 0) {
       console.warn(`${stockUpdateErrors} produk gagal diperbarui stoknya.`);
-    }    // Return transaction data
+    } // Fetch updated products data to return to client
+    const productIds = items.map((item) => item.id);
+    console.log("Mengambil data terbaru untuk produk dengan ID:", productIds);
+
+    const { data: updatedProducts, error: fetchError } = await supabase
+      .from("products")
+      .select("*")
+      .in("id", productIds);
+
+    if (fetchError) {
+      console.warn("Gagal mengambil data produk terbaru:", fetchError);
+    } else {
+      console.log(
+        `Berhasil mengambil ${updatedProducts?.length || 0} data produk terbaru`
+      );
+
+      // Log each updated product for debugging
+      updatedProducts?.forEach((product) => {
+        console.log(
+          `Produk ${product.name} (${product.id}) stok terbaru: ${product.stock}`
+        );
+      });
+    }
+
+    // Return transaction data and updated products
     return NextResponse.json(
       {
         success: true,
@@ -150,8 +206,9 @@ export async function POST(req: Request) {  try {
           cashReceived,
           change,
           cashier: cashierName, // Gunakan nama kasir untuk display
-          cashierId // Juga kembalikan ID untuk referensi
+          cashierId, // Juga kembalikan ID untuk referensi
         },
+        updatedProducts: updatedProducts || [], // Include updated products data
       },
       { status: 201 }
     );
