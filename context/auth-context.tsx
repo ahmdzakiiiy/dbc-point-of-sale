@@ -19,7 +19,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     // Check for stored auth data when component mounts
     const checkAuth = () => {
@@ -32,6 +31,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: userId,
           username,
         });
+      } else {
+        // Pastikan state user kosong jika tidak ada data auth yang lengkap
+        setUser(null);
+        // Hapus data auth yang tidak lengkap
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+
+        // Clear cookies
+        document.cookie = "isLoggedIn=; path=/; max-age=0";
+        document.cookie = "username=; path=/; max-age=0";
+        document.cookie = "userId=; path=/; max-age=0";
       }
 
       setIsLoading(false);

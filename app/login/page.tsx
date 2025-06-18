@@ -46,7 +46,6 @@ export default function LoginPage() {
       setPasswordError("");
     }
   };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
@@ -87,12 +86,32 @@ export default function LoginPage() {
 
           router.push("/dashboard");
         } else {
+          // Pastikan tidak ada data autentikasi yang tersisa
+          localStorage.removeItem("isLoggedIn");
+          localStorage.removeItem("username");
+          localStorage.removeItem("userId");
+
+          // Clear cookies
+          document.cookie = "isLoggedIn=; path=/; max-age=0";
+          document.cookie = "username=; path=/; max-age=0";
+          document.cookie = "userId=; path=/; max-age=0";
+
           setLoginError(
             data.error || "Username atau password salah. Silakan coba lagi."
           );
         }
       } catch (error) {
         console.error("Login error:", error);
+        // Pastikan tidak ada data autentikasi yang tersisa jika terjadi error
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+
+        // Clear cookies
+        document.cookie = "isLoggedIn=; path=/; max-age=0";
+        document.cookie = "username=; path=/; max-age=0";
+        document.cookie = "userId=; path=/; max-age=0";
+
         setLoginError("Terjadi kesalahan saat login. Silakan coba lagi.");
       }
     }

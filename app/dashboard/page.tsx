@@ -202,23 +202,79 @@ export default function DashboardPage() {
     DailySalesData[] | MonthlySalesData[]
   >([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState({
+    productCount: 0,
+    totalStock: 0,
+    totalSales: 0,
+    totalTransactions: 0,
+    avgTransaction: 0,
+  });
 
-  // Simulate data fetching
+  // Fetch data from API
   useEffect(() => {
     const fetchSalesData = async () => {
       setIsLoading(true);
+      setError(null);
 
       try {
-        // Simulate API call delay
-        await new Promise((resolve) => setTimeout(resolve, 500));
+        const currentDate = new Date();
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1;
 
-        const data =
-          viewMode === "daily"
-            ? generateDailySalesData()
-            : generateMonthlySalesData();
-        setSalesData(data);
+        const response = await fetch(
+          `/api/dashboard?viewMode=${viewMode}&year=${year}&month=${month}`
+        );
+
+        if (!response.ok) {
+          throw new Error("Gagal mengambil data dashboard");
+        }
+
+        const data = await response.json();
+
+        // Transform API data to match our expected format
+        const transformedData = data.salesData.map((item: any) => {
+          if (viewMode === "daily") {
+            const date = new Date(item.date);
+            return {
+              day: date.getDate(),
+              date: date.toLocaleDateString("id-ID", {
+                day: "2-digit",
+                month: "2-digit",
+              }),
+              dayName: date.toLocaleDateString("id-ID", { weekday: "short" }),
+              sales: item.sales,
+              transactions: item.transactions,
+              avgTransaction: item.avgTransaction,
+            } as DailySalesData;
+          } else {
+            return {
+              month: data.salesData.indexOf(item) + 1,
+              monthName: item.date,
+              sales: item.sales,
+              transactions: item.transactions,
+              avgTransaction: item.avgTransaction,
+              growth: 0, // We'll calculate this below
+            } as MonthlySalesData;
+          }
+        });
+
+        // Calculate growth for monthly data
+        if (viewMode === "monthly") {
+          for (let i = 1; i < transformedData.length; i++) {
+            const prevSales = transformedData[i - 1].sales;
+            const currentSales = transformedData[i].sales;
+            transformedData[i].growth = prevSales
+              ? Math.round(((currentSales - prevSales) / prevSales) * 100)
+              : 0;
+          }
+        }
+
+        setSalesData(transformedData);
+        setDashboardData(data.dashboardData);
       } catch (error) {
         console.error("Error fetching sales data:", error);
+        setError("Gagal memuat data. Silakan coba lagi.");
         setSalesData([]);
       } finally {
         setIsLoading(false);
@@ -281,13 +337,13 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-2">
               <div className="text-lg md:text-2xl font-bold">
-                {products.length}
+                {dashboardData.productCount}
               </div>
               <p className="text-[10px] md:text-xs text-muted-foreground">
-                6 jenis produk
+                Jenis produk
               </p>
             </CardContent>
-          </Card>{" "}
+          </Card>
           <Card className="p-2 sm:p-3 md:p-4">
             <CardHeader className="flex flex-row items-center justify-between p-2 pb-1 md:pb-2">
               <CardTitle className="text-xs md:text-sm font-medium">
@@ -297,7 +353,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-2">
               <div className="text-lg md:text-2xl font-bold">
-                {products.reduce((total, product) => total + product.stock, 0)}
+                {dashboardData.totalStock}
               </div>
               <p className="text-[10px] md:text-xs text-muted-foreground">
                 Total produk
@@ -313,10 +369,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-2">
               <div className="text-lg md:text-2xl font-bold">
-                Rp {totalSales.toLocaleString("id-ID")}
+                Rp {dashboardData.totalSales.toLocaleString("id-ID")}
               </div>
               <p className="text-[10px] md:text-xs text-muted-foreground">
-                {totalTransactions} transaksi
+                {dashboardData.totalTransactions} transaksi
               </p>
             </CardContent>
           </Card>
@@ -329,15 +385,10 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="p-2">
               <div className="text-lg md:text-2xl font-bold">
-                Rp {avgTransactionValue.toLocaleString("id-ID")}
+                Rp {dashboardData.avgTransaction.toLocaleString("id-ID")}
               </div>
-              <p
-                className={`text-[10px] md:text-xs ${
-                  currentPeriodGrowth >= 0 ? "text-green-600" : "text-red-600"
-                }`}
-              >
-                {currentPeriodGrowth >= 0 ? "+" : ""}
-                {currentPeriodGrowth}% periode
+              <p className="text-[10px] md:text-xs text-muted-foreground">
+                Nilai transaksi
               </p>
             </CardContent>
           </Card>

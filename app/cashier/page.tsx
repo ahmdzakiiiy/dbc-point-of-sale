@@ -47,57 +47,24 @@ import {
   Eye,
   Calendar,
   Tag,
+  Loader2,
 } from "lucide-react";
 import DashboardNav from "@/components/dashboard-nav";
+import ProductImagePlaceholder from "@/components/product-image-placeholder";
 
-// Sample product data
-const products = [
-  {
-    id: 1,
-    name: "Daster Anaya Pink",
-    stock: 15,
-    price: 120000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 2,
-    name: "Daster Busui Kuning",
-    stock: 8,
-    price: 135000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 3,
-    name: "Gamis Putih",
-    stock: 3,
-    price: 185000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 4,
-    name: "Dress Hitam",
-    stock: 12,
-    price: 150000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 5,
-    name: "Kemeja Navy",
-    stock: 4,
-    price: 110000,
-    image: "/placeholder.svg",
-  },
-  {
-    id: 6,
-    name: "Kaftan Coklat",
-    stock: 7,
-    price: 165000,
-    image: "/placeholder.svg",
-  },
-];
+// Product data will be fetched from API
+const initialProducts: Product[] = [];
+
+type Product = {
+  id: string;
+  name: string;
+  stock: number;
+  price: number;
+  image_url?: string;
+};
 
 type CartItem = {
-  id: number;
+  id: string;
   name: string;
   price: number;
   quantity: number;
@@ -111,7 +78,7 @@ type Discount = {
 
 type Transaction = {
   id: string;
-  date: Date;
+  date: Date | string; // Can be either Date object or ISO string from API
   items: CartItem[];
   subtotal: number;
   discount?: Discount;
@@ -122,52 +89,11 @@ type Transaction = {
   status: "completed" | "refunded";
 };
 
-// Sample transaction history
-const initialTransactions: Transaction[] = [
-  {
-    id: "TRX-001234",
-    date: new Date(2024, 11, 15, 14, 30),
-    items: [
-      { id: 1, name: "Daster Anaya Pink", price: 120000, quantity: 2 },
-      { id: 3, name: "Gamis Putih", price: 185000, quantity: 1 },
-    ],
-    subtotal: 425000,
-    discount: { type: "percentage", value: 10, amount: 42500 },
-    total: 382500,
-    cashReceived: 400000,
-    change: 17500,
-    cashier: "Admin",
-    status: "completed",
-  },
-  {
-    id: "TRX-001235",
-    date: new Date(2024, 11, 15, 15, 45),
-    items: [{ id: 2, name: "Daster Busui Kuning", price: 135000, quantity: 1 }],
-    subtotal: 135000,
-    total: 135000,
-    cashReceived: 150000,
-    change: 15000,
-    cashier: "Admin",
-    status: "completed",
-  },
-  {
-    id: "TRX-001236",
-    date: new Date(2024, 11, 15, 16, 20),
-    items: [
-      { id: 4, name: "Dress Hitam", price: 150000, quantity: 1 },
-      { id: 5, name: "Kemeja Navy", price: 110000, quantity: 2 },
-    ],
-    subtotal: 370000,
-    discount: { type: "fixed", value: 25000, amount: 25000 },
-    total: 345000,
-    cashReceived: 350000,
-    change: 5000,
-    cashier: "Admin",
-    status: "completed",
-  },
-];
+// Transaction history will be fetched from API
+const initialTransactions: Transaction[] = [];
 
 export default function CashierPage() {
+  const [products, setProducts] = useState<Product[]>(initialProducts);
   const [searchTerm, setSearchTerm] = useState("");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
@@ -185,6 +111,8 @@ export default function CashierPage() {
     useState<Transaction[]>(initialTransactions);
   const [transactionSearchTerm, setTransactionSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("products");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Discount states
   const [discountType, setDiscountType] = useState<"percentage" | "fixed">(
@@ -281,29 +209,106 @@ export default function CashierPage() {
     e.preventDefault();
     e.currentTarget.blur(); // Remove focus to prevent any scroll behavior
   };
-
-  // Load transactions from localStorage on component mount
+  // Fetch products and transaction history from API on component mount
   useEffect(() => {
-    const savedTransactions = localStorage.getItem("pos_transactions");
-    if (savedTransactions) {
-      const parsedTransactions = JSON.parse(savedTransactions).map(
-        (t: any) => ({
-          ...t,
-          date: new Date(t.date),
-        })
-      );
-      setTransactions(parsedTransactions);
+    async function fetchInitialData() {
+      setIsLoading(true);
+      setError(null);
+
+      try {
+        // Fetch products
+        const productsResponse = await fetch("/api/cashier/products");
+        if (!productsResponse.ok) {
+          throw new Error("Gagal mengambil data produk");
+        }
+        const productsData = await productsResponse.json();
+        setProducts(productsData.products);
+
+        // Fetch transaction history
+        const historyResponse = await fetch("/api/cashier/history");
+        if (!historyResponse.ok) {
+          throw new Error("Gagal mengambil riwayat transaksi");
+        }
+        const historyData = await historyResponse.json();
+
+        // Convert date strings to Date objects
+        const formattedTransactions = historyData.transactions.map(
+          (t: any) => ({
+            ...t,
+            date: new Date(t.date),
+            // Ensure these fields are properly formatted as numbers
+            subtotal: Number(t.subtotal),
+            total: Number(t.total),
+            cashReceived: Number(t.cashReceived || 0),
+            change: Number(t.change || 0),
+          })
+        );
+
+        setTransactions(formattedTransactions);
+      } catch (err: any) {
+        console.error("Error fetching initial data:", err);
+        setError(err.message || "Terjadi kesalahan saat memuat data");
+      } finally {
+        setIsLoading(false);
+      }
     }
+
+    fetchInitialData();
   }, []);
-
-  // Save transactions to localStorage whenever transactions change
+  // Search products from API when search term changes
   useEffect(() => {
-    localStorage.setItem("pos_transactions", JSON.stringify(transactions));
-  }, [transactions]);
+    if (searchTerm.trim() === "") {
+      // If search term is empty, load all products
+      const fetchAllProducts = async () => {
+        setIsLoading(true);
+        try {
+          const response = await fetch("/api/cashier/products");
+          if (!response.ok) {
+            throw new Error("Gagal mengambil data produk");
+          }
+          const data = await response.json();
+          setProducts(data.products);
+        } catch (err: any) {
+          console.error("Error searching products:", err);
+          setError(err.message || "Terjadi kesalahan saat mencari produk");
+        } finally {
+          setIsLoading(false);
+        }
+      };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+      fetchAllProducts();
+      return;
+    }
+
+    // Debounce search requests
+    const timer = setTimeout(() => {
+      async function searchProducts() {
+        setIsLoading(true);
+        try {
+          const response = await fetch(
+            `/api/cashier/products?search=${encodeURIComponent(searchTerm)}`
+          );
+          if (!response.ok) {
+            throw new Error("Gagal mencari produk");
+          }
+          const data = await response.json();
+          setProducts(data.products);
+        } catch (err: any) {
+          console.error("Error searching products:", err);
+          setError(err.message || "Terjadi kesalahan saat mencari produk");
+        } finally {
+          setIsLoading(false);
+        }
+      }
+
+      searchProducts();
+    }, 500); // Wait 500ms after typing stops
+
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // No need for client-side filtering as API does the filtering
+  const filteredProducts = products;
 
   // Filter transactions based on search term
   const filteredTransactions = transactions
@@ -319,7 +324,11 @@ export default function CashierPage() {
           .toLowerCase()
           .includes(transactionSearchTerm.toLowerCase())
     )
-    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date, newest first
+    .sort((a, b) => {
+      const dateA = a.date instanceof Date ? a.date : new Date(a.date);
+      const dateB = b.date instanceof Date ? b.date : new Date(b.date);
+      return dateB.getTime() - dateA.getTime();
+    }); // Sort by date, newest first
 
   // Format number with thousands separator
   const formatCurrency = (amount: number | string) => {
@@ -407,7 +416,7 @@ export default function CashierPage() {
     }
   };
 
-  const updateQuantity = (id: number, quantity: number) => {
+  const updateQuantity = (id: string, quantity: number) => {
     if (quantity <= 0) {
       setCart(cart.filter((item) => item.id !== id));
     } else {
@@ -435,21 +444,18 @@ export default function CashierPage() {
       return { type: "fixed", value, amount };
     }
   };
-
   const calculateTotal = () => {
     const subtotal = calculateSubtotal();
-    const discount = calculateDiscount();
+    const discount = discountApplied
+      ? calculateDiscount()
+      : { type: "fixed", value: 0, amount: 0 };
     return Math.max(0, subtotal - discount.amount);
   };
 
   const calculateItemSubtotal = (item: CartItem) => {
     return item.price * item.quantity;
   };
-
-  const generateTransactionId = () => {
-    const timestamp = Date.now().toString().slice(-6);
-    return `TRX-${timestamp}`;
-  };
+  // ID will be generated on the server
 
   const applyDiscount = () => {
     if (discountValue && getDiscountNumericValue(discountValue) > 0) {
@@ -467,58 +473,116 @@ export default function CashierPage() {
     setDiscountType("percentage");
     setDiscountValue("");
     setDiscountApplied(false);
-  };
-
-  const handlePayment = async () => {
+  };  const handlePayment = async () => {
     setIsProcessing(true);
 
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {      const subtotal = calculateSubtotal();
+      // Pastikan discount selalu memiliki format yang konsisten untuk server
+      const discount = discountApplied ? calculateDiscount() : { type: "fixed", value: 0, amount: 0 };
+      const total = calculateTotal();
+      const cashAmountValue = getNumericValue(cashAmount);
+      const change = cashAmountValue - total;
+      // Gunakan userId (UUID) alih-alih username untuk foreign key
+      const cashierId = localStorage.getItem("userId");
+      const cashierName = localStorage.getItem("username") || "Admin";
+      
+      if (!cashierId) {
+        throw new Error("User ID tidak ditemukan. Silakan login kembali.");
+      }      // Log transaksi ke konsol untuk debug
+      console.log("Mengirim data transaksi:", {
+        items: cart,
+        subtotal,
+        discount,
+        total,
+        cashReceived: cashAmountValue,
+        change,
+        cashierId,
+        cashierName
+      });
 
-    const subtotal = calculateSubtotal();
-    const discount = discountApplied ? calculateDiscount() : undefined;
-    const total = calculateTotal();
+      // Send transaction data to API
+      const response = await fetch("/api/cashier/checkout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          items: cart.map(item => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            quantity: item.quantity
+          })),
+          subtotal,
+          discount,
+          total,
+          cashReceived: cashAmountValue,
+          change,
+          cashierId, // Kirim ID (UUID)
+          cashierName // Kirim nama untuk tampilan
+        }),
+      });      // Log response untuk debug
+      console.log("Status response:", response.status);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error dari server:", errorData);
+        throw new Error(errorData.error || "Gagal memproses pembayaran");
+      }      const result = await response.json();
+      console.log("Data transaksi dari server:", result);
 
-    // Create transaction data
-    const transactionData: Transaction = {
-      id: generateTransactionId(),
-      date: new Date(),
-      items: [...cart],
-      subtotal,
-      discount,
-      total,
-      cashReceived: getNumericValue(cashAmount),
-      change: getNumericValue(cashAmount) - total,
-      cashier: localStorage.getItem("username") || "Admin",
-      status: "completed",
-    };
+      // Convert string date to Date object
+      const transactionWithDateObj = {
+        ...result.transaction,
+        date: new Date(result.transaction.date) // Konversi string date ke objek Date
+      };
 
-    // Add to transactions list
-    setTransactions((prev) => [transactionData, ...prev]);
-    setLastTransaction(transactionData);
+      // Use the transaction data returned from API with proper date object
+      setLastTransaction(transactionWithDateObj);
 
-    // Reset form
-    setCart([]);
-    setPaymentModalOpen(false);
-    resetPaymentForm();
-    setIsProcessing(false);
+      // Update local transactions list with the new transaction with proper date object
+      setTransactions((prev) => [transactionWithDateObj, ...prev]);
 
-    // Show receipt
-    setReceiptModalOpen(true);
+      // Reset form
+      setCart([]);
+      setPaymentModalOpen(false);
+      resetPaymentForm();
+
+      // Show receipt
+      setReceiptModalOpen(true);
+    } catch (error: any) {
+      setError(error.message || "Terjadi kesalahan saat memproses pembayaran");
+      console.error("Payment error:", error);
+    } finally {
+      setIsProcessing(false);
+    }
   };
-
   const viewTransactionDetail = (transaction: Transaction) => {
-    setSelectedTransaction(transaction);
+    // Convert date to Date object if it's a string
+    const transactionWithDateObj = {
+      ...transaction,
+      date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date),
+    };
+    setSelectedTransaction(transactionWithDateObj);
     setTransactionDetailModalOpen(true);
   };
-
   const reprintReceipt = (transaction: Transaction) => {
-    setLastTransaction(transaction);
+    // Convert date to Date object if it's a string
+    const transactionWithDateObj = {
+      ...transaction,
+      date: transaction.date instanceof Date ? transaction.date : new Date(transaction.date),
+    };
+    setLastTransaction(transactionWithDateObj);
     setReceiptModalOpen(true);
-  };
-  const downloadReceipt = (transaction?: Transaction) => {
-    const receiptTransaction = transaction || lastTransaction;
-    if (!receiptTransaction) return;
+  };  const downloadReceipt = (transaction?: Transaction) => {
+    const inputTransaction = transaction || lastTransaction;
+    if (!inputTransaction) return;
+    
+    // Ensure date is a Date object
+    const receiptTransaction = {
+      ...inputTransaction,
+      date: inputTransaction.date instanceof Date ? inputTransaction.date : new Date(inputTransaction.date),
+    };
 
     // Create PDF document in receipt/thermal printer format (narrower than A4)
     const doc = new jsPDF({
@@ -574,15 +638,19 @@ export default function CashierPage() {
     // Transaction details
     doc.setFontSize(8);
     doc.text(`ID Transaksi: ${receiptTransaction.id}`, margin, y);
-    y += 4;
+    y += 4;    // Ensure date is a Date object for PDF generation
+    const transactionDate = receiptTransaction.date instanceof Date 
+      ? receiptTransaction.date 
+      : new Date(receiptTransaction.date);
+    
     doc.text(
-      `Tanggal: ${receiptTransaction.date.toLocaleDateString("id-ID")}`,
+      `Tanggal: ${transactionDate.toLocaleDateString("id-ID")}`,
       margin,
       y
     );
     y += 4;
     doc.text(
-      `Waktu: ${receiptTransaction.date.toLocaleTimeString("id-ID")}`,
+      `Waktu: ${transactionDate.toLocaleTimeString("id-ID")}`,
       margin,
       y
     );
@@ -711,9 +779,10 @@ export default function CashierPage() {
     // Save the PDF
     doc.save(`struk-${receiptTransaction.id}.pdf`);
   };
-
-  const formatDateTime = (date: Date) => {
-    return date.toLocaleDateString("id-ID", {
+  const formatDateTime = (date: Date | string) => {
+    // Ensure date is a Date object
+    const dateObj = date instanceof Date ? date : new Date(date);
+    return dateObj.toLocaleDateString("id-ID", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -721,8 +790,6 @@ export default function CashierPage() {
       minute: "2-digit",
     });
   };
-
-  const transactionId = generateTransactionId();
   const currentDate = new Date().toLocaleDateString("id-ID", {
     weekday: "long",
     year: "numeric",
@@ -764,76 +831,112 @@ export default function CashierPage() {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
-                </div>
-
-                {/* Vertical 3-column grid layout */}
-                <div className="grid grid-cols-3 gap-3">
-                  {filteredProducts.map((product) => (
-                    <Card
-                      key={product.id}
-                      className="overflow-hidden flex flex-col h-full"
-                    >
-                      {/* Product Image */}
-                      <CardHeader className="p-0">
-                        <div className="aspect-square w-full overflow-hidden bg-gray-100">
-                          <Image
-                            src={
-                              product.image ||
-                              "/placeholder.svg?height=150&width=150"
-                            }
-                            alt={product.name}
-                            width={150}
-                            height={150}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
-                          />
-                        </div>
-                      </CardHeader>
-
-                      {/* Product Information */}
-                      <CardContent className="p-3 flex-1 flex flex-col">
-                        <div className="flex-1">
-                          <CardTitle className="text-sm font-medium leading-tight mb-2 line-clamp-2 min-h-[2.5rem]">
-                            {product.name}
-                          </CardTitle>
-
-                          {/* Stock Information with Visual Indicator */}
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-muted-foreground">
-                                Stok:
-                              </span>
-                              <span
-                                className={`text-xs font-medium ${
-                                  product.stock < 5
-                                    ? "text-red-500"
-                                    : "text-gray-700"
-                                }`}
-                              >
-                                {product.stock}
-                              </span>{" "}
-                            </div>
+                </div>                {/* Product grid layout - 2 columns on mobile, 3 on larger screens */}{" "}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {isLoading ? (
+                    // Loading state - show 6 loading placeholders
+                    Array.from({ length: 6 }).map((_, index) => (
+                      <Card
+                        key={index}
+                        className="overflow-hidden flex flex-col h-full animate-pulse"
+                      >
+                        <CardHeader className="p-0">
+                          <div className="aspect-square w-full bg-gray-200"></div>
+                        </CardHeader>
+                        <CardContent className="p-3 flex-1 flex flex-col">
+                          <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+                          <div className="h-4 bg-gray-200 rounded w-1/2 mb-3"></div>
+                        </CardContent>
+                        <CardFooter className="p-3 pt-0">
+                          <div className="h-9 bg-gray-200 rounded w-full"></div>
+                        </CardFooter>
+                      </Card>
+                    ))
+                  ) : error ? (
+                    // Error state
+                    <div className="col-span-3 flex flex-col items-center justify-center p-8 text-center">
+                      <AlertTriangle className="h-8 w-8 text-red-500 mb-2" />
+                      <h3 className="font-medium text-lg">
+                        Gagal Memuat Produk
+                      </h3>
+                      <p className="text-muted-foreground mb-4">{error}</p>
+                      <Button
+                        onClick={() => window.location.reload()}
+                        variant="outline"
+                      >
+                        Coba Lagi
+                      </Button>
+                    </div>
+                  ) : (
+                    // Products loaded successfully
+                    filteredProducts.map((product) => (
+                      <Card
+                        key={product.id}
+                        className="overflow-hidden flex flex-col h-full"
+                      >
+                        {/* Product Image */}
+                        <CardHeader className="p-0">
+                          <div className="aspect-square w-full overflow-hidden bg-gray-100">
+                            <Image
+                              src={
+                                product.image_url ||
+                                "/placeholder.svg?height=150&width=150"
+                              }
+                              alt={product.name}
+                              width={150}
+                              height={150}
+                              className="w-full h-full object-cover hover:scale-105 transition-transform duration-200"
+                            />
                           </div>
+                        </CardHeader>
 
-                          <p className="font-semibold text-sm text-violet-600 mb-3">
-                            Rp {product.price.toLocaleString("id-ID")}
-                          </p>
-                        </div>
-                      </CardContent>
+                        {/* Product Information */}
+                        <CardContent className="p-3 flex-1 flex flex-col">
+                          <div className="flex-1">
+                            <CardTitle className="text-sm font-medium leading-tight mb-2 line-clamp-2 min-h-[2.5rem]">
+                              {product.name}
+                            </CardTitle>
 
-                      {/* Add Button */}
-                      <CardFooter className="p-3 pt-0">
-                        <Button
-                          onClick={() => addToCart(product)}
-                          className="w-full bg-violet-500 hover:bg-violet-600 text-sm py-2"
-                          disabled={product.stock === 0}
-                        >
-                          {product.stock === 0 ? "Habis" : "Tambah"}
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))}
+                            {/* Stock Information with Visual Indicator */}
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground">
+                                  Stok:
+                                </span>
+                                <span
+                                  className={`text-xs font-medium ${
+                                    product.stock < 5
+                                      ? "text-red-500"
+                                      : "text-gray-700"
+                                  }`}
+                                >
+                                  {product.stock}
+                                </span>{" "}
+                              </div>
+                            </div>
 
-                  {filteredProducts.length === 0 && (
+                            <p className="font-semibold text-sm text-violet-600 mb-3">
+                              Rp {product.price.toLocaleString("id-ID")}
+                            </p>
+                          </div>
+                        </CardContent>
+
+                        {/* Add Button */}
+                        <CardFooter className="p-3 pt-0">
+                          <Button
+                            onClick={() => addToCart(product)}
+                            className="w-full bg-violet-500 hover:bg-violet-600 text-sm py-2"
+                            disabled={product.stock === 0}
+                          >
+                            {product.stock === 0 ? "Habis" : "Tambah"}
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))
+                  )}
+
+                  {!isLoading && !error && filteredProducts.length === 0 && (
                     <div className="col-span-3 text-center py-8 text-muted-foreground">
                       {searchTerm
                         ? "Tidak ada produk yang ditemukan"
@@ -950,9 +1053,45 @@ export default function CashierPage() {
                     />
                   </div>
                 </div>
-              </CardHeader>
+              </CardHeader>{" "}
               <CardContent>
-                {filteredTransactions.length === 0 ? (
+                {isLoading ? (
+                  // Loading state
+                  <div className="space-y-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <Card
+                        key={index}
+                        className="animate-pulse border-l-4 border-l-gray-200"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                            <div className="flex-1">
+                              <div className="h-6 bg-gray-200 rounded w-1/4 mb-2"></div>
+                              <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                              <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                            </div>
+                            <div className="h-8 bg-gray-200 rounded w-24"></div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                ) : error ? (
+                  // Error state
+                  <div className="flex flex-col items-center justify-center p-8 text-center">
+                    <AlertTriangle className="h-12 w-12 text-red-500 mb-4" />
+                    <h3 className="font-medium text-lg mb-2">
+                      Gagal memuat riwayat transaksi
+                    </h3>
+                    <p className="text-muted-foreground mb-4">{error}</p>
+                    <Button
+                      onClick={() => window.location.reload()}
+                      variant="outline"
+                    >
+                      Coba Lagi
+                    </Button>
+                  </div>
+                ) : filteredTransactions.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     {transactionSearchTerm
                       ? "Tidak ada transaksi yang ditemukan"
@@ -1075,16 +1214,15 @@ export default function CashierPage() {
         <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
           <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
+              {" "}
               <DialogTitle className="flex items-center gap-2">
                 <Receipt className="h-5 w-5" />
                 Konfirmasi Pembayaran
               </DialogTitle>
               <DialogDescription>
-                ID Transaksi:{" "}
-                <span className="font-mono font-medium">{transactionId}</span>
+                Periksa dan konfirmasi detail pembayaran
               </DialogDescription>
             </DialogHeader>
-
             <div className="space-y-6">
               {/* Transaction Details */}
               <div className="space-y-4">
@@ -1390,8 +1528,15 @@ export default function CashierPage() {
                     </div>
                   )}
               </div>
-            </div>
-
+            </div>{" "}
+            {error && (
+              <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-red-500 mr-2" />
+                  <div className="text-red-700">{error}</div>
+                </div>
+              </div>
+            )}
             <DialogFooter>
               <Button
                 onClick={handlePayment}
@@ -1402,7 +1547,14 @@ export default function CashierPage() {
                   isProcessing
                 }
               >
-                {isProcessing ? "Memproses..." : "Konfirmasi Pembayaran"}
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  "Konfirmasi Pembayaran"
+                )}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -1608,17 +1760,20 @@ export default function CashierPage() {
                   <div className="flex justify-between">
                     <span>ID Transaksi:</span>
                     <span className="font-mono">{lastTransaction.id}</span>
-                  </div>
-                  <div className="flex justify-between">
+                  </div>                  <div className="flex justify-between">
                     <span>Tanggal:</span>
                     <span>
-                      {lastTransaction.date.toLocaleDateString("id-ID")}
+                      {(lastTransaction.date instanceof Date 
+                        ? lastTransaction.date 
+                        : new Date(lastTransaction.date)).toLocaleDateString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Waktu:</span>
                     <span>
-                      {lastTransaction.date.toLocaleTimeString("id-ID")}
+                      {(lastTransaction.date instanceof Date 
+                        ? lastTransaction.date 
+                        : new Date(lastTransaction.date)).toLocaleTimeString("id-ID")}
                     </span>
                   </div>
                   <div className="flex justify-between">
