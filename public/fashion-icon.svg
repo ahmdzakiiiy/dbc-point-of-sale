@@ -1,0 +1,26 @@
+<svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dress Shape -->
+  <path d="M50 10C46 10 42 12 40 16L30 36V80C30 85 35 90 40 90H60C65 90 70 85 70 80V36L60 16C58 12 54 10 50 10Z" fill="#8B5CF6" stroke="#5B21B6" stroke-width="2"/>
+  
+  <!-- Collar -->
+  <path d="M40 16C43 20 47 22 50 22C53 22 57 20 60 16" stroke="#5B21B6" stroke-width="2"/>
+  
+  <!-- Waist pattern -->
+  <path d="M30 40H70" stroke="#7C3AED" stroke-width="2"/>
+  
+  <!-- Decorative embroidery patterns -->
+  <circle cx="50" cy="30" r="4" fill="#C4B5FD"/>
+  <circle cx="40" cy="50" r="3" fill="#C4B5FD"/>
+  <circle cx="60" cy="50" r="3" fill="#C4B5FD"/>
+  <circle cx="50" cy="70" r="4" fill="#C4B5FD"/>
+  
+  <!-- Small decorative stars for embroidery effect -->
+  <path d="M45 55L43 57L45 59L47 57L45 55Z" fill="#EDE9FE"/>
+  <path d="M55 55L53 57L55 59L57 57L55 55Z" fill="#EDE9FE"/>
+  <path d="M50 45L48 47L50 49L52 47L50 45Z" fill="#EDE9FE"/>
+  <path d="M45 65L43 67L45 69L47 67L45 65Z" fill="#EDE9FE"/>
+  <path d="M55 65L53 67L55 69L57 67L55 65Z" fill="#EDE9FE"/>
+  
+  <!-- Hanger hook -->
+  <path d="M50 10C50 10 50 5 50 3C50 1.89543 50.8954 1 52 1C53.1046 1 54 1.89543 54 3C54 4.10457 53.1046 5 52 5H50" stroke="#64748B" stroke-width="2"/>
+</svg>
