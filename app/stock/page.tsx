@@ -164,6 +164,12 @@ export default function StockPage() {
   ) => {
     const file = event.target.files?.[0];
     if (file) {
+      // Check if the file is an image
+      if (!file.type.startsWith('image/')) {
+        alert('Silakan pilih file gambar yang valid.');
+        return;
+      }
+      
       // Store whether this is for edit mode
       setIsEdit(isEditMode);
       
@@ -175,7 +181,7 @@ export default function StockPage() {
         setTempImage(imageUrl);
         // Open the crop modal
         setCropModalOpen(true);
-        // Reset crop dimensions
+        // Reset crop - actual dimension will be set in onImageLoad
         setCrop({ unit: '%', width: 80, height: 80, x: 10, y: 10 });
       };
       reader.readAsDataURL(file);
@@ -403,10 +409,16 @@ export default function StockPage() {
     }
 
     const pixelRatio = window.devicePixelRatio;
-    
-    // Set canvas size to the crop size
+      // Set canvas size to the crop size
     canvas.width = crop.width * scaleX * pixelRatio;
     canvas.height = crop.height * scaleY * pixelRatio;
+
+    // Clear the canvas to ensure transparency
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Create transparent background
+    ctx.fillStyle = "rgba(255, 255, 255, 0)"; // Fully transparent
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Scale canvas context for high DPI displays
     ctx.scale(pixelRatio, pixelRatio);
@@ -435,9 +447,9 @@ export default function StockPage() {
   const handleSaveCrop = async () => {
     if (!completedCrop || !previewCanvasRef.current) return;
     
-    try {
-      const canvas = previewCanvasRef.current;
-      const croppedImageUrl = canvas.toDataURL('image/jpeg');
+    try {      const canvas = previewCanvasRef.current;
+      // Use PNG format to preserve transparency
+      const croppedImageUrl = canvas.toDataURL('image/png', 1.0);
       
       // Update image preview
       setImagePreview(croppedImageUrl);
@@ -456,13 +468,30 @@ export default function StockPage() {
       alert('Gagal menyimpan gambar. Silakan coba lagi.');
     }
   };
-
   // Update cropped image whenever crop changes
   useEffect(() => {
     if (completedCrop) {
       generateCroppedImage();
     }
   }, [completedCrop, generateCroppedImage]);
+  
+  // Set initial crop when image loads
+  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    const { width, height } = e.currentTarget;
+    
+    // Set initial crop to centered square using at least 80% of the smaller dimension
+    const size = Math.min(width, height) * 0.8;
+    const x = (width - size) / 2;
+    const y = (height - size) / 2;
+    
+    setCrop({
+      unit: 'px',
+      width: size,
+      height: size,
+      x,
+      y
+    });
+  }, []);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -989,14 +1018,15 @@ export default function StockPage() {
                   onChange={(c) => setCrop(c)}
                   onComplete={(c) => setCompletedCrop(c)}
                   aspect={1}
-                  className="max-h-[350px] max-w-full"
-                >
-                  <img
+                  className="max-h-[350px] max-w-full bg-transparent"
+                  ruleOfThirds
+                ><img
                     ref={imgRef}
                     alt="Crop"
                     src={tempImage}
                     style={{ maxHeight: '350px', maxWidth: '100%' }}
-                    onLoad={() => generateCroppedImage()}
+                    onLoad={onImageLoad}
+                    crossOrigin="anonymous"
                   />
                 </ReactCrop>
               )}
