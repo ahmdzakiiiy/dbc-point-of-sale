@@ -2,8 +2,10 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
+import ReactCrop, { type Crop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -82,6 +84,14 @@ export default function StockPage() {
   });
   const [imagePreview, setImagePreview] = useState<string>("");
   const [processing, setProcessing] = useState(false);
+  // Image cropping states
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [tempImage, setTempImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState<Crop>({ unit: '%', width: 80, height: 80, x: 10, y: 10 });
+  const [completedCrop, setCompletedCrop] = useState<Crop | null>(null);
+  const [isEdit, setIsEdit] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
+  const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const { user } = useAuth();
   
   // Fetch products from API
@@ -148,34 +158,27 @@ export default function StockPage() {
     if (/[0-9]/.test(e.key)) {
       e.preventDefault();
     }
-  };
-  const handleImageUpload = async (
+  };  const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
-    isEdit = false
+    isEditMode = false
   ) => {
     const file = event.target.files?.[0];
     if (file) {
-      // For preview
+      // Store whether this is for edit mode
+      setIsEdit(isEditMode);
+      
+      // Read the file and open the crop modal
       const reader = new FileReader();
       reader.onload = (e) => {
         const imageUrl = e.target?.result as string;
-        setImagePreview(imageUrl);
+        // Set temporary image for cropping
+        setTempImage(imageUrl);
+        // Open the crop modal
+        setCropModalOpen(true);
+        // Reset crop dimensions
+        setCrop({ unit: '%', width: 80, height: 80, x: 10, y: 10 });
       };
       reader.readAsDataURL(file);
-      
-      try {
-        // Convert to base64 string for storage
-        const base64String = await convertFileToBase64(file);
-        
-        if (isEdit && currentProduct) {
-          setCurrentProduct({ ...currentProduct, image_url: base64String });
-        } else {
-          setNewProduct({ ...newProduct, image_url: base64String });
-        }
-      } catch (err) {
-        console.error('Error processing image:', err);
-        alert('Gagal memproses gambar. Silakan coba lagi.');
-      }
     }
   };
   
@@ -381,6 +384,86 @@ export default function StockPage() {
       setNewProduct({ ...newProduct, image_url: "" });
     }
   };
+
+  // Function to generate a canvas with the cropped image
+  const generateCroppedImage = useCallback(() => {
+    if (!completedCrop || !imgRef.current || !previewCanvasRef.current) return;
+
+    const image = imgRef.current;
+    const canvas = previewCanvasRef.current;
+    const crop = completedCrop;
+
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
+    const ctx = canvas.getContext('2d');
+
+    if (!ctx) {
+      console.error('No 2d context');
+      return;
+    }
+
+    const pixelRatio = window.devicePixelRatio;
+    
+    // Set canvas size to the crop size
+    canvas.width = crop.width * scaleX * pixelRatio;
+    canvas.height = crop.height * scaleY * pixelRatio;
+
+    // Scale canvas context for high DPI displays
+    ctx.scale(pixelRatio, pixelRatio);
+    ctx.imageSmoothingQuality = 'high';
+
+    // Draw the cropped image
+    const cropX = crop.x * scaleX;
+    const cropY = crop.y * scaleY;
+    const cropWidth = crop.width * scaleX;
+    const cropHeight = crop.height * scaleY;
+
+    ctx.drawImage(
+      image,
+      cropX, 
+      cropY,
+      cropWidth,
+      cropHeight,
+      0,
+      0,
+      cropWidth,
+      cropHeight
+    );
+  }, [completedCrop]);
+
+  // Save the cropped image
+  const handleSaveCrop = async () => {
+    if (!completedCrop || !previewCanvasRef.current) return;
+    
+    try {
+      const canvas = previewCanvasRef.current;
+      const croppedImageUrl = canvas.toDataURL('image/jpeg');
+      
+      // Update image preview
+      setImagePreview(croppedImageUrl);
+      
+      // Update product with cropped image
+      if (isEdit && currentProduct) {
+        setCurrentProduct({ ...currentProduct, image_url: croppedImageUrl });
+      } else {
+        setNewProduct({ ...newProduct, image_url: croppedImageUrl });
+      }
+      
+      // Close the crop modal
+      setCropModalOpen(false);
+    } catch (err) {
+      console.error('Error saving cropped image:', err);
+      alert('Gagal menyimpan gambar. Silakan coba lagi.');
+    }
+  };
+
+  // Update cropped image whenever crop changes
+  useEffect(() => {
+    if (completedCrop) {
+      generateCroppedImage();
+    }
+  }, [completedCrop, generateCroppedImage]);
+
   return (
     <div className="flex min-h-screen flex-col">
       <DashboardNav />{" "}
@@ -882,6 +965,64 @@ export default function StockPage() {
                 className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm h-8 sm:h-10"
               >
                 Simpan
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Crop Image Modal */}
+        <Dialog
+          open={cropModalOpen}
+          onOpenChange={setCropModalOpen}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Sesuaikan Gambar</DialogTitle>
+              <DialogDescription>
+                Geser dan ubah ukuran kotak untuk mengatur gambar yang akan disimpan.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="flex flex-col items-center gap-4 py-4">
+              {tempImage && (                <ReactCrop
+                  crop={crop}
+                  onChange={(c) => setCrop(c)}
+                  onComplete={(c) => setCompletedCrop(c)}
+                  aspect={1}
+                  className="max-h-[350px] max-w-full"
+                >
+                  <img
+                    ref={imgRef}
+                    alt="Crop"
+                    src={tempImage}
+                    style={{ maxHeight: '350px', maxWidth: '100%' }}
+                    onLoad={() => generateCroppedImage()}
+                  />
+                </ReactCrop>
+              )}
+              
+              {/* Hidden canvas for cropped image generation */}
+              <canvas
+                ref={previewCanvasRef}
+                style={{ display: 'none' }}
+              />
+            </div>
+
+            <DialogFooter className="sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setCropModalOpen(false)}
+                className="text-xs sm:text-sm"
+              >
+                Batal
+              </Button>
+              <Button
+                type="button"
+                onClick={handleSaveCrop}
+                className="bg-violet-500 hover:bg-violet-600 text-xs sm:text-sm"
+              >
+                Terapkan
               </Button>
             </DialogFooter>
           </DialogContent>
