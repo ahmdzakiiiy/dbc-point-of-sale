@@ -126,7 +126,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <Image
-              src="/dress-svgrepo-com.svg"
+              src="/dbc.png"
               alt="Daster Bordir Cantik Logo"
               width={100}
               height={100}
