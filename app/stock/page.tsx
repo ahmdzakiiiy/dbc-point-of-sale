@@ -4,8 +4,8 @@ import type React from "react";
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import Image from "next/image";
-import ReactCrop, { type Crop } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import ReactCrop, { type Crop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -87,34 +87,40 @@ export default function StockPage() {
   // Image cropping states
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [tempImage, setTempImage] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Crop>({ unit: '%', width: 80, height: 80, x: 10, y: 10 });
+  const [crop, setCrop] = useState<Crop>({
+    unit: "%",
+    width: 80,
+    height: 80,
+    x: 10,
+    y: 10,
+  });
   const [completedCrop, setCompletedCrop] = useState<Crop | null>(null);
   const [isEdit, setIsEdit] = useState(false);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const { user } = useAuth();
-  
+
   // Fetch products from API
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const response = await fetch('/api/products');
-          if (!response.ok) {
-          throw new Error('Gagal mengambil data produk');
+        const response = await fetch("/api/products");
+        if (!response.ok) {
+          throw new Error("Gagal mengambil data produk");
         }
-        
+
         const data = await response.json();
         setProducts(data.products || []);
         setError(null);
       } catch (err) {
-        console.error('Error mengambil data produk:', err);
-        setError('Gagal memuat data produk. Silakan coba lagi.');
+        console.error("Error mengambil data produk:", err);
+        setError("Gagal memuat data produk. Silakan coba lagi.");
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchProducts();
   }, []);
 
@@ -158,21 +164,22 @@ export default function StockPage() {
     if (/[0-9]/.test(e.key)) {
       e.preventDefault();
     }
-  };  const handleImageUpload = async (
+  };
+  const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>,
     isEditMode = false
   ) => {
     const file = event.target.files?.[0];
     if (file) {
       // Check if the file is an image
-      if (!file.type.startsWith('image/')) {
-        alert('Silakan pilih file gambar yang valid.');
+      if (!file.type.startsWith("image/")) {
+        alert("Silakan pilih file gambar yang valid.");
         return;
       }
-      
+
       // Store whether this is for edit mode
       setIsEdit(isEditMode);
-      
+
       // Read the file and open the crop modal
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -182,12 +189,12 @@ export default function StockPage() {
         // Open the crop modal
         setCropModalOpen(true);
         // Reset crop - actual dimension will be set in onImageLoad
-        setCrop({ unit: '%', width: 80, height: 80, x: 10, y: 10 });
+        setCrop({ unit: "%", width: 80, height: 80, x: 10, y: 10 });
       };
       reader.readAsDataURL(file);
     }
   };
-  
+
   // Convert file to base64
   const convertFileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -196,11 +203,12 @@ export default function StockPage() {
       reader.onerror = reject;
       reader.readAsDataURL(file);
     });
-  };  const handleAddProduct = async () => {
+  };
+  const handleAddProduct = async () => {
     try {
       setProcessing(true);
       const { formattedPrice, ...productData } = newProduct;
-      
+
       // Convert to proper types and format
       const productToAdd = {
         name: productData.name,
@@ -208,25 +216,25 @@ export default function StockPage() {
         price: Number(getNumericValue(formattedPrice)),
         image_url: productData.image_url,
       };
-      
+
       // Send to API
-      const response = await fetch('/api/products', {
-        method: 'POST',
+      const response = await fetch("/api/products", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(productToAdd),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Gagal menambahkan produk');
+        throw new Error("Gagal menambahkan produk");
       }
-      
+
       const { product } = await response.json();
-      
+
       // Update products state with new product
       setProducts([...products, product]);
-      
+
       // Reset form
       setNewProduct({
         name: "",
@@ -238,50 +246,54 @@ export default function StockPage() {
       setImagePreview("");
       setIsAddModalOpen(false);
     } catch (err) {
-      console.error('Error adding product:', err);
-      alert('Gagal menambahkan produk. Silakan coba lagi.');
+      console.error("Error adding product:", err);
+      alert("Gagal menambahkan produk. Silakan coba lagi.");
     } finally {
       setProcessing(false);
     }
   };
   const handleEditProduct = async () => {
     if (!currentProduct) return;
-    
+
     try {
       setProcessing(true);
-      
+
       // Prepare data for API
       const productToUpdate = {
         name: currentProduct.name,
         stock: Number(currentProduct.stock),
-        price: Number(typeof currentProduct.price === 'string' 
-          ? getNumericValue(currentProduct.price) 
-          : currentProduct.price),
-        image_url: currentProduct.image_url
+        price: Number(
+          typeof currentProduct.price === "string"
+            ? getNumericValue(currentProduct.price)
+            : currentProduct.price
+        ),
+        image_url: currentProduct.image_url,
       };
-      
+
       // Send to API
       const response = await fetch(`/api/products/${currentProduct.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(productToUpdate),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Gagal mengubah produk');
+        throw new Error("Gagal mengubah produk");
       }
-      
+
       const { product } = await response.json();
-      
+
       // Update products state
-      setProducts(products.map((p) => (p.id === currentProduct.id ? product : p)));
+      setProducts(
+        products.map((p) => (p.id === currentProduct.id ? product : p))
+      );
       setIsEditModalOpen(false);
       setImagePreview("");
     } catch (err) {
-      console.error('Error updating product:', err);
-      alert('Gagal mengubah produk. Silakan coba lagi.');
+      console.error("Error updating product:", err);
+      alert("Gagal mengubah produk. Silakan coba lagi.");
     } finally {
       setProcessing(false);
     }
@@ -289,78 +301,81 @@ export default function StockPage() {
 
   const handleDeleteProduct = async () => {
     if (!currentProduct) return;
-    
+
     try {
       setProcessing(true);
-      
+
       // Send delete request to API
       const response = await fetch(`/api/products/${currentProduct.id}`, {
-        method: 'DELETE',
+        method: "DELETE",
       });
-      
+
       if (!response.ok) {
-        throw new Error('Gagal menghapus produk');
+        throw new Error("Gagal menghapus produk");
       }
-      
+
       // Remove from products state
       setProducts(products.filter((p) => p.id !== currentProduct.id));
       setIsDeleteAlertOpen(false);
     } catch (err) {
-      console.error('Error deleting product:', err);
-      alert('Gagal menghapus produk. Silakan coba lagi.');
+      console.error("Error deleting product:", err);
+      alert("Gagal menghapus produk. Silakan coba lagi.");
     } finally {
       setProcessing(false);
     }
   };
   const handleAddStock = async () => {
     if (!currentProduct || !addStockQuantity) return;
-    
+
     try {
       setProcessing(true);
       const quantityToAdd = Number.parseInt(addStockQuantity);
-      
+
       if (quantityToAdd <= 0) {
-        alert('Silakan masukkan jumlah yang valid');
+        alert("Silakan masukkan jumlah yang valid");
         return;
       }
-      
+
       // Get current product data
       const newStock = currentProduct.stock + quantityToAdd;
-      
+
       // Prepare data for API
       const productToUpdate = {
         ...currentProduct,
-        stock: newStock
+        stock: newStock,
       };
-      
+
       // Send to API
       const response = await fetch(`/api/products/${currentProduct.id}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(productToUpdate),
       });
-      
+
       if (!response.ok) {
-        throw new Error('Gagal mengubah stok');
+        throw new Error("Gagal mengubah stok");
       }
-      
+
       const { product } = await response.json();
-      
+
       // Update products state
-      setProducts(products.map((p) => (p.id === currentProduct.id ? product : p)));
-      
+      setProducts(
+        products.map((p) => (p.id === currentProduct.id ? product : p))
+      );
+
       setIsAddStockModalOpen(false);
       setAddStockQuantity("");
       setCurrentProduct(null);
     } catch (err) {
-      console.error('Error adding stock:', err);
-      alert('Gagal mengubah stok. Silakan coba lagi.');
+      console.error("Error adding stock:", err);
+      alert("Gagal mengubah stok. Silakan coba lagi.");
     } finally {
       setProcessing(false);
     }
-  };  const openEditModal = (product: Product) => {
+  };
+  const openEditModal = (product: Product) => {
     const productWithFormattedPrice = {
       ...product,
       formattedPrice: formatPrice(product.price),
@@ -401,28 +416,28 @@ export default function StockPage() {
 
     const scaleX = image.naturalWidth / image.width;
     const scaleY = image.naturalHeight / image.height;
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
 
     if (!ctx) {
-      console.error('No 2d context');
+      console.error("No 2d context");
       return;
     }
 
     const pixelRatio = window.devicePixelRatio;
-      // Set canvas size to the crop size
+    // Set canvas size to the crop size
     canvas.width = crop.width * scaleX * pixelRatio;
     canvas.height = crop.height * scaleY * pixelRatio;
 
     // Clear the canvas to ensure transparency
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    
+
     // Create transparent background
     ctx.fillStyle = "rgba(255, 255, 255, 0)"; // Fully transparent
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Scale canvas context for high DPI displays
     ctx.scale(pixelRatio, pixelRatio);
-    ctx.imageSmoothingQuality = 'high';
+    ctx.imageSmoothingQuality = "high";
 
     // Draw the cropped image
     const cropX = crop.x * scaleX;
@@ -432,7 +447,7 @@ export default function StockPage() {
 
     ctx.drawImage(
       image,
-      cropX, 
+      cropX,
       cropY,
       cropWidth,
       cropHeight,
@@ -446,26 +461,27 @@ export default function StockPage() {
   // Save the cropped image
   const handleSaveCrop = async () => {
     if (!completedCrop || !previewCanvasRef.current) return;
-    
-    try {      const canvas = previewCanvasRef.current;
+
+    try {
+      const canvas = previewCanvasRef.current;
       // Use PNG format to preserve transparency
-      const croppedImageUrl = canvas.toDataURL('image/png', 1.0);
-      
+      const croppedImageUrl = canvas.toDataURL("image/png", 1.0);
+
       // Update image preview
       setImagePreview(croppedImageUrl);
-      
+
       // Update product with cropped image
       if (isEdit && currentProduct) {
         setCurrentProduct({ ...currentProduct, image_url: croppedImageUrl });
       } else {
         setNewProduct({ ...newProduct, image_url: croppedImageUrl });
       }
-      
+
       // Close the crop modal
       setCropModalOpen(false);
     } catch (err) {
-      console.error('Error saving cropped image:', err);
-      alert('Gagal menyimpan gambar. Silakan coba lagi.');
+      console.error("Error saving cropped image:", err);
+      alert("Gagal menyimpan gambar. Silakan coba lagi.");
     }
   };
   // Update cropped image whenever crop changes
@@ -474,24 +490,27 @@ export default function StockPage() {
       generateCroppedImage();
     }
   }, [completedCrop, generateCroppedImage]);
-  
+
   // Set initial crop when image loads
-  const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
-    const { width, height } = e.currentTarget;
-    
-    // Set initial crop to centered square using at least 80% of the smaller dimension
-    const size = Math.min(width, height) * 0.8;
-    const x = (width - size) / 2;
-    const y = (height - size) / 2;
-    
-    setCrop({
-      unit: 'px',
-      width: size,
-      height: size,
-      x,
-      y
-    });
-  }, []);
+  const onImageLoad = useCallback(
+    (e: React.SyntheticEvent<HTMLImageElement>) => {
+      const { width, height } = e.currentTarget;
+
+      // Set initial crop to centered square using at least 80% of the smaller dimension
+      const size = Math.min(width, height) * 0.8;
+      const x = (width - size) / 2;
+      const y = (height - size) / 2;
+
+      setCrop({
+        unit: "px",
+        width: size,
+        height: size,
+        x,
+        y,
+      });
+    },
+    []
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -525,24 +544,30 @@ export default function StockPage() {
             <CardTitle className="text-sm sm:text-base md:text-lg">
               Daftar Produk
             </CardTitle>
-          </CardHeader>          <CardContent className="p-1 sm:p-2 md:p-4">
+          </CardHeader>{" "}
+          <CardContent className="p-1 sm:p-2 md:p-4">
             {loading ? (
-              <div className="flex justify-center items-center p-8">                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
+              <div className="flex justify-center items-center p-8">
+                {" "}
+                <Loader2 className="h-8 w-8 animate-spin text-violet-500" />
                 <span className="ml-2">Memuat produk...</span>
               </div>
             ) : error ? (
               <div className="text-center text-red-500 p-8">
                 {error}
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="ml-2"
                   onClick={() => window.location.reload()}
                 >
                   Coba Lagi
                 </Button>
-              </div>            ) : filteredProducts.length === 0 ? (
+              </div>
+            ) : filteredProducts.length === 0 ? (
               <div className="text-center p-8 text-gray-500">
-                {searchTerm ? "Tidak ada produk yang cocok dengan pencarian Anda" : "Belum ada produk tersedia. Tambahkan produk pertama Anda!"}
+                {searchTerm
+                  ? "Tidak ada produk yang cocok dengan pencarian Anda"
+                  : "Belum ada produk tersedia. Tambahkan produk pertama Anda!"}
               </div>
             ) : (
               <Table>
@@ -1000,42 +1025,39 @@ export default function StockPage() {
         </Dialog>
 
         {/* Crop Image Modal */}
-        <Dialog
-          open={cropModalOpen}
-          onOpenChange={setCropModalOpen}
-        >
+        <Dialog open={cropModalOpen} onOpenChange={setCropModalOpen}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>Sesuaikan Gambar</DialogTitle>
               <DialogDescription>
-                Geser dan ubah ukuran kotak untuk mengatur gambar yang akan disimpan.
+                Geser dan ubah ukuran kotak untuk mengatur gambar yang akan
+                disimpan.
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="flex flex-col items-center gap-4 py-4">
-              {tempImage && (                <ReactCrop
+              {tempImage && (
+                <ReactCrop
                   crop={crop}
                   onChange={(c) => setCrop(c)}
                   onComplete={(c) => setCompletedCrop(c)}
                   aspect={1}
                   className="max-h-[350px] max-w-full bg-transparent"
                   ruleOfThirds
-                ><img
+                >
+                  <img
                     ref={imgRef}
                     alt="Crop"
                     src={tempImage}
-                    style={{ maxHeight: '350px', maxWidth: '100%' }}
+                    style={{ maxHeight: "350px", maxWidth: "100%" }}
                     onLoad={onImageLoad}
                     crossOrigin="anonymous"
                   />
                 </ReactCrop>
               )}
-              
+
               {/* Hidden canvas for cropped image generation */}
-              <canvas
-                ref={previewCanvasRef}
-                style={{ display: 'none' }}
-              />
+              <canvas ref={previewCanvasRef} style={{ display: "none" }} />
             </div>
 
             <DialogFooter className="sm:justify-end">

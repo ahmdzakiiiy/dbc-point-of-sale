@@ -9,7 +9,7 @@ export async function OPTIONS() {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "POST, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
     },
   });
 }
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
       const cookieStore = cookies();
       cookieStore.set("isLoggedIn", "true", { path: "/", maxAge: 86400 });
       cookieStore.set("username", username, { path: "/", maxAge: 86400 });
-      cookieStore.set("userId", userId, { path: "/", maxAge: 86400 });      // Return user info for client-side use
+      cookieStore.set("userId", userId, { path: "/", maxAge: 86400 }); // Return user info for client-side use
       return NextResponse.json(
         {
           success: true,
@@ -80,8 +80,8 @@ export async function POST(request: Request) {
           headers: {
             "Access-Control-Allow-Origin": "*",
             "Access-Control-Allow-Methods": "POST, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization"
-          }
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
         }
       );
     } else {

@@ -4,22 +4,25 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    
+
     return NextResponse.json({
       received: body,
       method: "POST",
       timestamp: new Date().toISOString(),
-      success: true
+      success: true,
     });
   } catch (error: any) {
     console.error("Test login error:", error);
-    
-    return NextResponse.json({
-      error: error.message || "Unknown error",
-      method: "POST",
-      timestamp: new Date().toISOString(),
-      success: false
-    }, { status: 400 });
+
+    return NextResponse.json(
+      {
+        error: error.message || "Unknown error",
+        method: "POST",
+        timestamp: new Date().toISOString(),
+        success: false,
+      },
+      { status: 400 }
+    );
   }
 }
 
@@ -27,7 +30,7 @@ export async function GET() {
   return NextResponse.json({
     message: "This endpoint requires a POST request",
     method: "GET",
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 }
 
@@ -40,7 +43,7 @@ export async function OPTIONS() {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
       },
     }
   );
