@@ -48,128 +48,61 @@ export default function LoginPage() {
     } else {
       setPasswordError("");
     }
-  };
-
-  // Diagnostic function to test all endpoints
+  };  // Diagnostic function to test all endpoints
   const runDiagnostics = async () => {
     setApiInfo("Running diagnostics...");
-    let results = [];      try {
-        // Test Health Endpoint
+    let results = [];
+    
+    try {
+        // Test Health Endpoint - Simplified to reduce errors
         results.push("Checking /api/health endpoint...");
-        const healthResponse = await fetch("/api/health", {
-          method: "GET",
-          cache: "no-store",
-          headers: { "Content-Type": "application/json" },
-        });
-        
-        // First check if response is HTML (common error in production)
-        const healthText = await healthResponse.text();
-        if (healthText.trim().startsWith("<!DOCTYPE html>") || healthText.includes("<html")) {
-          results.push(
-            `Health API ERROR: Received HTML instead of JSON. Status: ${healthResponse.status}`
-          );
-          results.push(`HTML snippet: ${healthText.substring(0, 100)}...`);
-        } else {
-          // Try to parse as JSON
-          try {
-            const healthData = JSON.parse(healthText);
-            results.push(
-              `Health API: ${healthResponse.status} - ${JSON.stringify(
-                healthData
-              ).slice(0, 50)}...`
-            );
-          } catch (jsonError) {
-            results.push(
-              `Health API ERROR: Invalid JSON. Status: ${healthResponse.status}`
-            );
-            results.push(`Raw response: ${healthText.substring(0, 100)}...`);
-          }
+        try {
+          const healthResponse = await fetch("/api/health");
+          results.push(`Health API Status: ${healthResponse.status}`);
+          
+          const healthText = await healthResponse.text();
+          results.push(`Health API Response: ${healthText}`);
+        } catch (err: any) {
+          results.push(`Health API ERROR: ${err.message}`);
         }
 
         // Test Alternative Login Endpoint
         results.push("Checking /api/test/login endpoint...");
-        const testLoginResponse = await fetch("/api/test/login", {
-          method: "POST",
-          cache: "no-store",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ test: true }),
-        });
-        
-        // Check for HTML response
-        const testLoginText = await testLoginResponse.text();
-        if (testLoginText.trim().startsWith("<!DOCTYPE html>") || testLoginText.includes("<html")) {
-          results.push(
-            `Test Login API ERROR: Received HTML instead of JSON. Status: ${testLoginResponse.status}`
-          );
-          results.push(`HTML snippet: ${testLoginText.substring(0, 100)}...`);
-        } else {
-          // Try to parse as JSON
-          try {
-            const testLoginData = JSON.parse(testLoginText);
-            results.push(
-              `Test Login API: ${testLoginResponse.status} - ${JSON.stringify(
-                testLoginData
-              ).slice(0, 50)}...`
-            );
-          } catch (jsonError) {
-            results.push(
-              `Test Login API ERROR: Invalid JSON. Status: ${testLoginResponse.status}`
-            );
-            results.push(`Raw response: ${testLoginText.substring(0, 100)}...`);
-          }
-        }        // Test Real Login Endpoint with OPTIONS
-        results.push("Checking /api/auth/login OPTIONS...");
-        const optionsResponse = await fetch("/api/auth/login", {
-          method: "OPTIONS",
-          cache: "no-store",
-        });
-        results.push(
-          `Login OPTIONS: ${optionsResponse.status} - ${optionsResponse.statusText}`
-        );
-
-        // Display Response Headers
-        const headers: Record<string, string> = {};
-        optionsResponse.headers.forEach((value, key) => {
-          headers[key] = value;
-        });
-        results.push(`Response Headers: ${JSON.stringify(headers, null, 2)}`);
-
-        // Test Diagnostic endpoint
-        results.push("Checking /api/diagnose endpoint...");
         try {
-          const diagResponse = await fetch("/api/diagnose", {
-            method: "GET",
-            cache: "no-store",
-            headers: { "Content-Type": "application/json" },
+          const testLoginResponse = await fetch("/api/test/login", {
+            method: "POST",
+            body: JSON.stringify({ test: true }),
           });
+          results.push(`Test Login API Status: ${testLoginResponse.status}`);
           
-          const diagText = await diagResponse.text();
-          if (diagText.trim().startsWith("<!DOCTYPE html>") || diagText.includes("<html")) {
-            results.push(
-              `Diagnostic API ERROR: Received HTML instead of JSON. Status: ${diagResponse.status}`
-            );
-            results.push(`HTML snippet: ${diagText.substring(0, 100)}...`);
-          } else {
-            // Try to parse as JSON
-            try {
-              const diagData = JSON.parse(diagText);
-              results.push(
-                `Diagnostic API: ${diagResponse.status} - ${JSON.stringify(
-                  diagData
-                ).slice(0, 100)}...`
-              );
-            } catch (jsonError) {
-              results.push(
-                `Diagnostic API ERROR: Invalid JSON. Status: ${diagResponse.status}`
-              );
-              results.push(`Raw response: ${diagText.substring(0, 100)}...`);
-            }
-          }
-        } catch (diagError: unknown) {
-          const errorMessage = diagError instanceof Error ? diagError.message : 'Unknown error';
-          results.push(`Diagnostic API ERROR: ${errorMessage}`);
+          // Get response as text first
+          const testLoginText = await testLoginResponse.text();
+          results.push(`Test Login API Response: ${testLoginText.substring(0, 100)}`);
+        } catch (err: any) {
+          results.push(`Test Login API ERROR: ${err.message}`);
         }
 
+        // Test Real Login Endpoint with OPTIONS
+        results.push("Checking /api/auth/login OPTIONS...");
+        try {
+          const optionsResponse = await fetch("/api/auth/login", {
+            method: "OPTIONS",
+          });
+          results.push(`Login OPTIONS Status: ${optionsResponse.status}`);
+          
+          // Get response as text first
+          const optionsText = await optionsResponse.text();
+          results.push(`Login OPTIONS Response: ${optionsText.substring(0, 100)}`);
+        } catch (err: any) {
+          results.push(`Login OPTIONS ERROR: ${err.message}`);
+        }
+
+        // Display environment info
+        results.push(`Environment: ${process.env.NODE_ENV}`);
+        results.push(`Hostname: ${window.location.hostname}`);
+        results.push(`Protocol: ${window.location.protocol}`);
+
+        // Set the results
         setApiInfo(results.join("\n"));
     } catch (error: any) {
       setApiInfo(`Diagnostic error: ${error.message}`);

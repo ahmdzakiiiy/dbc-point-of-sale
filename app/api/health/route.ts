@@ -1,53 +1,8 @@
 import { NextResponse } from "next/server";
-// Don't use cookies for health check as it can cause issues in some environments
-// import { cookies } from "next/headers";
 
 export async function GET() {
-  const environment = process.env.NODE_ENV || "development";
-
-  try {
-    // Simplified health check that doesn't depend on cookies
-    // This ensures it will work in all environments
-    return NextResponse.json(
-      {
-        status: "ok",
-        timestamp: new Date().toISOString(),
-        environment,
-        apiVersion: "1.0.0",
-        serverTime: new Date().toLocaleString(),
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store, max-age=0",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      }
-    );
-  } catch (error: any) {
-    console.error("Health check error:", error);
-
-    return NextResponse.json(
-      {
-        status: "error",
-        timestamp: new Date().toISOString(),
-        environment,
-        message: error.message || "Unknown error",
-      },
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-store, max-age=0",
-          "Access-Control-Allow-Origin": "*",
-          "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        },
-      }
-    );
-  }
+  // Return the simplest possible JSON response
+  return NextResponse.json({ status: "ok", time: new Date().toISOString() });
 }
 
 // Handle OPTIONS request for CORS
