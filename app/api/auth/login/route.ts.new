@@ -19,20 +19,20 @@ const USERS = {
     id: "1",
     username: "admin",
     password: "password123",
-    role: "admin",
+    role: "admin"
   },
   cashier: {
     id: "2",
     username: "cashier",
     password: "cashier123",
-    role: "cashier",
+    role: "cashier"
   },
   manager: {
     id: "3",
     username: "manager",
     password: "manager123",
-    role: "manager",
-  },
+    role: "manager"
+  }
 };
 
 // Simplified login that works without database
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
 
     // Check if user exists in our static data
     const user = USERS[username as keyof typeof USERS];
-
+    
     if (user && user.password === password) {
       // User authenticated successfully
       const responseData = {
@@ -53,12 +53,12 @@ export async function POST(request: Request) {
         user: {
           id: user.id,
           username: user.username,
-          role: user.role,
+          role: user.role
         },
         // Include auth token for client-side use
-        token: `${user.id}_${Date.now()}_${user.role}`,
+        token: `${user.id}_${Date.now()}_${user.role}`
       };
-
+      
       // Return success response
       return new Response(JSON.stringify(responseData), {
         status: 200,
@@ -72,9 +72,9 @@ export async function POST(request: Request) {
     } else {
       // Invalid credentials
       return new Response(
-        JSON.stringify({
+        JSON.stringify({ 
           success: false,
-          error: "Username atau password salah",
+          error: "Username atau password salah" 
         }),
         {
           status: 401,
@@ -89,13 +89,13 @@ export async function POST(request: Request) {
     }
   } catch (error: any) {
     console.error("Login error:", error);
-
+    
     // Return a simplified error response
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: "Login error occurred",
-        errorDetails: error instanceof Error ? error.message : "Unknown error",
+      JSON.stringify({ 
+        success: false, 
+        error: "Login error occurred", 
+        errorDetails: error instanceof Error ? error.message : "Unknown error" 
       }),
       {
         status: 500,

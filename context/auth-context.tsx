@@ -20,7 +20,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);  useEffect(() => {
+  const [isLoading, setIsLoading] = useState(true);
+  useEffect(() => {
     // Check for stored auth data when component mounts
     const checkAuth = () => {
       const isLoggedIn = localStorage.getItem("isLoggedIn");
@@ -32,7 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser({
           id: userId,
           username,
-          role: userRole || undefined
+          role: userRole || undefined,
         });
       } else {
         // Pastikan state user kosong jika tidak ada data auth yang lengkap
@@ -78,7 +79,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const isAuthenticated = user !== null;
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, isAuthenticated }}>
+    <AuthContext.Provider
+      value={{ user, isLoading, login, logout, isAuthenticated }}
+    >
       {children}
     </AuthContext.Provider>
   );

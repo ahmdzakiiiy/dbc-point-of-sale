@@ -5,7 +5,7 @@ export function GET() {
     JSON.stringify({
       status: "ok",
       time: new Date().toISOString(),
-      message: "Minimal API endpoint with no dependencies"
+      message: "Minimal API endpoint with no dependencies",
     }),
     {
       status: 200,

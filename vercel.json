@@ -13,8 +13,14 @@
       "source": "/api/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
-        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
-        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization"
+        }
       ]
     },
     {
@@ -24,10 +30,16 @@
         { "key": "Access-Control-Allow-Origin", "value": "*" }
       ]
     }
-  ],  "rewrites": [
+  ],
+  "rewrites": [
     { "source": "/static-health", "destination": "/api-static/health.json" },
     { "source": "/static-login", "destination": "/api-static/test-login.json" },
-    { "source": "/static-fallback", "destination": "/api-static/fallback.json" },
-    { "source": "/static-debug", "destination": "/api-static/debug.json" }
+    {
+      "source": "/static-fallback",
+      "destination": "/api-static/fallback.json"
+    },
+    { "source": "/static-debug", "destination": "/api-static/debug.json" },
+    { "source": "/static-transactions", "destination": "/api-static/transactions.json" },
+    { "source": "/static-transaction/:id", "destination": "/api-static/transaction-:id.json" }
   ]
 }
