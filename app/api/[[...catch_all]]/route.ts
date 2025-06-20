@@ -1,26 +1,48 @@
-import { NextResponse } from "next/server";
-
 // Simplified catch-all route to handle any API requests that don't match specific routes
-export async function GET() {
-  return NextResponse.json({ error: "Not found", status: 404 }, { status: 404 });
+
+// Helper function to create a standard 404 response
+function createNotFoundResponse() {
+  return new Response(
+    JSON.stringify({ error: "Not found", status: 404 }),
+    {
+      status: 404,
+      headers: {
+        "Content-Type": "application/json",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization"
+      }
+    }
+  );
 }
 
-export async function POST() {
-  return NextResponse.json({ error: "Not found", status: 404 }, { status: 404 });
+export function GET() {
+  return createNotFoundResponse();
 }
 
-export async function PUT() {
-  return NextResponse.json({ error: "Not found", status: 404 }, { status: 404 });
+export function POST() {
+  return createNotFoundResponse();
 }
 
-export async function DELETE() {
-  return NextResponse.json({ error: "Not found", status: 404 }, { status: 404 });
+export function PUT() {
+  return createNotFoundResponse();
 }
 
-export async function PATCH() {
-  return NextResponse.json({ error: "Not found", status: 404 }, { status: 404 });
+export function DELETE() {
+  return createNotFoundResponse();
 }
 
-export async function OPTIONS() {
-  return NextResponse.json({ status: "ok" });
+export function PATCH() {
+  return createNotFoundResponse();
+}
+
+export function OPTIONS() {
+  return new Response(null, {
+    status: 204, // No content
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
 }

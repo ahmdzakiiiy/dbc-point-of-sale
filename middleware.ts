@@ -1,41 +1,13 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+// Remove all middleware for now to avoid MIDDLEWARE_INVOCATION_FAILED errors
 export function middleware(request: NextRequest) {
-  // Get the pathname of the request (e.g. /api/auth/login)
-  const path = request.nextUrl.pathname;
-
-  // Only run this middleware for API routes
-  if (path.startsWith("/api/")) {
-    // Create a response with minimum headers
-    const response = NextResponse.next();
-    
-    // Add CORS headers to the response - Keep this simple
-    response.headers.set("Access-Control-Allow-Origin", "*");
-    response.headers.set(
-      "Access-Control-Allow-Methods", 
-      "GET, POST, PUT, DELETE, OPTIONS"
-    );
-    response.headers.set(
-      "Access-Control-Allow-Headers",
-      "Content-Type, Authorization"
-    );
-
-    // Handle OPTIONS request for CORS preflight
-    if (request.method === "OPTIONS") {
-      return new NextResponse(null, {
-        status: 200,
-        headers: response.headers,
-      });
-    }
-
-    return response;
-  }
-
+  // Do nothing, just pass through
   return NextResponse.next();
 }
 
-// Specify which routes this middleware should run on
+// Don't match any routes for now
 export const config = {
-  matcher: "/api/:path*",
+  matcher: ["/none-for-now"],
 };
