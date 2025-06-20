@@ -53,33 +53,56 @@ export default function LoginPage() {
     setApiInfo("Running diagnostics...");
     let results = [];
     
-    try {
-        // Test Health Endpoint - Simplified to reduce errors
+    try {        // Test Health Endpoint - Even simpler to avoid any parsing
         results.push("Checking /api/health endpoint...");
         try {
-          const healthResponse = await fetch("/api/health");
+          const healthResponse = await fetch("/api/health", {
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+              "Cache-Control": "no-cache"
+            }
+          });
           results.push(`Health API Status: ${healthResponse.status}`);
           
-          const healthText = await healthResponse.text();
-          results.push(`Health API Response: ${healthText}`);
+          try {
+            const healthText = await healthResponse.text();
+            if (healthText.includes("<!DOCTYPE html>")) {
+              results.push("Health API returning HTML instead of JSON");
+              results.push(`HTML snippet: ${healthText.substring(0, 150)}...`);
+            } else {
+              results.push(`Health API Response: ${healthText}`);
+            }
+          } catch (textErr) {
+            results.push(`Health API text extraction error: ${textErr}`);
+          }
         } catch (err: any) {
-          results.push(`Health API ERROR: ${err.message}`);
-        }
-
-        // Test Alternative Login Endpoint
+          results.push(`Health API fetch ERROR: ${err.message}`);
+        }        // Test Alternative Login Endpoint - Use GET instead of POST as it's simpler
         results.push("Checking /api/test/login endpoint...");
         try {
           const testLoginResponse = await fetch("/api/test/login", {
-            method: "POST",
-            body: JSON.stringify({ test: true }),
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+              "Cache-Control": "no-cache"
+            }
           });
           results.push(`Test Login API Status: ${testLoginResponse.status}`);
           
-          // Get response as text first
-          const testLoginText = await testLoginResponse.text();
-          results.push(`Test Login API Response: ${testLoginText.substring(0, 100)}`);
+          try {
+            const testLoginText = await testLoginResponse.text();
+            if (testLoginText.includes("<!DOCTYPE html>")) {
+              results.push("Test Login API returning HTML instead of JSON");
+              results.push(`HTML snippet: ${testLoginText.substring(0, 150)}...`);
+            } else {
+              results.push(`Test Login API Response: ${testLoginText}`);
+            }
+          } catch (textErr) {
+            results.push(`Test Login API text extraction error: ${textErr}`);
+          }
         } catch (err: any) {
-          results.push(`Test Login API ERROR: ${err.message}`);
+          results.push(`Test Login API fetch ERROR: ${err.message}`);
         }
 
         // Test Real Login Endpoint with OPTIONS
@@ -95,12 +118,38 @@ export default function LoginPage() {
           results.push(`Login OPTIONS Response: ${optionsText.substring(0, 100)}`);
         } catch (err: any) {
           results.push(`Login OPTIONS ERROR: ${err.message}`);
+        }        // Test fallback endpoint
+        results.push("Checking /api/fallback endpoint...");
+        try {
+          const fallbackResponse = await fetch("/api/fallback", {
+            method: "GET",
+            headers: {
+              "Accept": "application/json",
+              "Cache-Control": "no-cache"
+            }
+          });
+          results.push(`Fallback API Status: ${fallbackResponse.status}`);
+          
+          try {
+            const fallbackText = await fallbackResponse.text();
+            if (fallbackText.includes("<!DOCTYPE html>")) {
+              results.push("Fallback API returning HTML instead of JSON");
+              results.push(`HTML snippet: ${fallbackText.substring(0, 150)}...`);
+            } else {
+              results.push(`Fallback API Response: ${fallbackText}`);
+            }
+          } catch (textErr) {
+            results.push(`Fallback API text extraction error: ${textErr}`);
+          }
+        } catch (err: any) {
+          results.push(`Fallback API fetch ERROR: ${err.message}`);
         }
 
         // Display environment info
         results.push(`Environment: ${process.env.NODE_ENV}`);
         results.push(`Hostname: ${window.location.hostname}`);
         results.push(`Protocol: ${window.location.protocol}`);
+        results.push(`User Agent: ${navigator.userAgent.substring(0, 100)}`);
 
         // Set the results
         setApiInfo(results.join("\n"));
