@@ -43,7 +43,7 @@ export async function POST(request: Request) {
     const { username, password } = body;
 
     // Check if user exists in our static data
-    const user = USERS[username as keyof typeof USERS];
+    const user = USERS[username];
     
     if (user && user.password === password) {
       // User authenticated successfully
@@ -72,8 +72,7 @@ export async function POST(request: Request) {
     } else {
       // Invalid credentials
       return new Response(
-        JSON.stringify({ 
-          success: false,
+        JSON.stringify({          success: false,
           error: "Username atau password salah" 
         }),
         {
@@ -87,7 +86,7 @@ export async function POST(request: Request) {
         }
       );
     }
-  } catch (error: any) {
+  } catch (error) {
     console.error("Login error:", error);
     
     // Return a simplified error response
@@ -97,6 +96,50 @@ export async function POST(request: Request) {
         error: "Login error occurred", 
         errorDetails: error instanceof Error ? error.message : "Unknown error" 
       }),
+          {
+            status: 200,
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            },
+          }
+        );
+      } catch (dbError: any) {
+        console.error("Database error:", dbError);
+        return new Response(
+          JSON.stringify({ error: "Database error: " + dbError.message }),
+          {
+            status: 500,
+            headers: {
+              "Content-Type": "application/json",
+              "Access-Control-Allow-Origin": "*",
+              "Access-Control-Allow-Methods": "POST, OPTIONS",
+              "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            },
+          }
+        );
+      }
+    } else {
+      // Credentials don't match
+      return new Response(
+        JSON.stringify({ error: "Username atau password salah" }),
+        {
+          status: 401,
+          headers: {
+            "Content-Type": "application/json",
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          },
+        }
+      );
+    }
+  } catch (error: any) {
+    console.error("Login error:", error);
+    return new Response(
+      JSON.stringify({ error: "Autentikasi gagal: " + error.message }),
       {
         status: 500,
         headers: {

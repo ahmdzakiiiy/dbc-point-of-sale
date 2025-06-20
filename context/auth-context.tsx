@@ -5,31 +5,34 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 type User = {
   id: string;
   username: string;
+  role?: string;
 };
 
 type AuthContextType = {
   user: User | null;
   isLoading: boolean;
-  login: (username: string, id: string) => void;
+  login: (username: string, id: string, role?: string) => void;
   logout: () => void;
+  isAuthenticated: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
+  const [isLoading, setIsLoading] = useState(true);  useEffect(() => {
     // Check for stored auth data when component mounts
     const checkAuth = () => {
       const isLoggedIn = localStorage.getItem("isLoggedIn");
       const username = localStorage.getItem("username");
       const userId = localStorage.getItem("userId");
+      const userRole = localStorage.getItem("userRole");
 
       if (isLoggedIn === "true" && username && userId) {
         setUser({
           id: userId,
           username,
+          role: userRole || undefined
         });
       } else {
         // Pastikan state user kosong jika tidak ada data auth yang lengkap
@@ -38,11 +41,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         localStorage.removeItem("isLoggedIn");
         localStorage.removeItem("username");
         localStorage.removeItem("userId");
-
-        // Clear cookies
-        document.cookie = "isLoggedIn=; path=/; max-age=0";
-        document.cookie = "username=; path=/; max-age=0";
-        document.cookie = "userId=; path=/; max-age=0";
+        localStorage.removeItem("userRole");
+        localStorage.removeItem("authToken");
       }
 
       setIsLoading(false);
@@ -51,18 +51,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     checkAuth();
   }, []);
 
-  const login = (username: string, id: string) => {
-    setUser({ id, username });
+  const login = (username: string, id: string, role?: string) => {
+    setUser({ id, username, role });
     localStorage.setItem("isLoggedIn", "true");
     localStorage.setItem("username", username);
     localStorage.setItem("userId", id);
+    if (role) {
+      localStorage.setItem("userRole", role);
+    }
   };
-
   const logout = () => {
     setUser(null);
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("username");
     localStorage.removeItem("userId");
+    localStorage.removeItem("userRole");
+    localStorage.removeItem("authToken");
 
     // Clear cookies
     document.cookie = "isLoggedIn=; path=/; max-age=0";
@@ -70,8 +74,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     document.cookie = "userId=; path=/; max-age=0";
   };
 
+  // Calculate authentication state
+  const isAuthenticated = user !== null;
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout }}>
+    <AuthContext.Provider value={{ user, isLoading, login, logout, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   );

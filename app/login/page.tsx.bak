@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -23,14 +25,8 @@ import {
   ChevronUp,
 } from "lucide-react";
 import Image from "next/image";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/context/auth-context";
-
-// Static user data for emergency fallback authentication
-const STATIC_USERS = {
-  admin: { id: "1", password: "password123", role: "admin" },
-  cashier: { id: "2", password: "cashier123", role: "cashier" },
-  manager: { id: "3", password: "manager123", role: "manager" }
-};
 
 export default function LoginPage() {
   const router = useRouter();
@@ -59,128 +55,179 @@ export default function LoginPage() {
     } else {
       setPasswordError("");
     }
-  };
-
-  // Diagnostic function to test all endpoints
+  }; // Diagnostic function to test all endpoints
   const runDiagnostics = async () => {
     setApiInfo("Running diagnostics...");
-    let results: string[] = [];
+    let results = [];
 
     try {
-      // Test regular API endpoints vs static files
+      // Test both the API endpoint and the static file
       results.push("Checking regular API health endpoint...");
       try {
         const healthResponse = await fetch("/api/health", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Regular Health API Status: ${healthResponse.status}`);
 
-        const healthText = await healthResponse.text();
-        if (healthText.includes("<!DOCTYPE html>")) {
-          results.push("Regular Health API returning HTML instead of JSON");
-          results.push(`HTML snippet: ${healthText.substring(0, 50)}...`);
-        } else {
-          results.push(`Regular Health API Response: ${healthText}`);
+        try {
+          const healthText = await healthResponse.text();
+          if (healthText.includes("<!DOCTYPE html>")) {
+            results.push("Regular Health API returning HTML instead of JSON");
+            results.push(`HTML snippet: ${healthText.substring(0, 50)}...`);
+          } else {
+            results.push(`Regular Health API Response: ${healthText}`);
+          }
+        } catch (textErr) {
+          results.push(`Regular Health API text extraction error: ${textErr}`);
         }
       } catch (err: any) {
         results.push(`Regular Health API ERROR: ${err.message}`);
       }
 
-      // Static health file
+      // Try static file instead
       results.push("\nChecking static health JSON file...");
       try {
         const staticHealthResponse = await fetch("/api-static/health.json", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Static Health JSON Status: ${staticHealthResponse.status}`);
-        const staticHealthText = await staticHealthResponse.text();
-        results.push(`Static Health JSON Response: ${staticHealthText}`);
+
+        try {
+          const staticHealthText = await staticHealthResponse.text();
+          results.push(`Static Health JSON Response: ${staticHealthText}`);
+        } catch (textErr) {
+          results.push(`Static Health JSON text extraction error: ${textErr}`);
+        }
       } catch (err: any) {
         results.push(`Static Health JSON ERROR: ${err.message}`);
       }
 
-      // Test login endpoints
+      // Test Alternative Login Endpoint
       results.push("\nChecking regular test login endpoint...");
       try {
         const testLoginResponse = await fetch("/api/test/login", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Regular Test Login API Status: ${testLoginResponse.status}`);
 
-        const testLoginText = await testLoginResponse.text();
-        if (testLoginText.includes("<!DOCTYPE html>")) {
-          results.push("Test Login API returning HTML instead of JSON");
-          results.push(`HTML snippet: ${testLoginText.substring(0, 50)}...`);
-        } else {
-          results.push(`Test Login API Response: ${testLoginText}`);
+        try {
+          const testLoginText = await testLoginResponse.text();
+          if (testLoginText.includes("<!DOCTYPE html>")) {
+            results.push("Test Login API returning HTML instead of JSON");
+            results.push(`HTML snippet: ${testLoginText.substring(0, 50)}...`);
+          } else {
+            results.push(`Test Login API Response: ${testLoginText}`);
+          }
+        } catch (textErr) {
+          results.push(`Test Login API text extraction error: ${textErr}`);
         }
       } catch (err: any) {
         results.push(`Test Login API ERROR: ${err.message}`);
       }
 
-      // Static test login
+      // Try static file instead
       results.push("\nChecking static test login JSON file...");
       try {
-        const staticTestLoginResponse = await fetch("/api-static/test-login.json", {
-          method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
-        });
+        const staticTestLoginResponse = await fetch(
+          "/api-static/test-login.json",
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              "Cache-Control": "no-cache",
+            },
+          }
+        );
         results.push(`Static Test Login JSON Status: ${staticTestLoginResponse.status}`);
-        const staticTestLoginText = await staticTestLoginResponse.text();
-        results.push(`Static Test Login JSON Response: ${staticTestLoginText}`);
+
+        try {
+          const staticTestLoginText = await staticTestLoginResponse.text();
+          results.push(`Static Test Login JSON Response: ${staticTestLoginText}`);
+        } catch (textErr) {
+          results.push(`Static Test Login JSON text extraction error: ${textErr}`);
+        }
       } catch (err: any) {
         results.push(`Static Test Login JSON ERROR: ${err.message}`);
       }
 
-      // Test Real Login OPTIONS
+      // Test Real Login Endpoint with OPTIONS
       results.push("\nChecking /api/auth/login OPTIONS...");
       try {
-        const optionsResponse = await fetch("/api/auth/login", { method: "OPTIONS" });
+        const optionsResponse = await fetch("/api/auth/login", {
+          method: "OPTIONS",
+        });
         results.push(`Login OPTIONS Status: ${optionsResponse.status}`);
+
+        // Get response as text first
         const optionsText = await optionsResponse.text();
-        results.push(`Login OPTIONS Response: ${optionsText.substring(0, 100)}`);
+        results.push(
+          `Login OPTIONS Response: ${optionsText.substring(0, 100)}`
+        );
       } catch (err: any) {
         results.push(`Login OPTIONS ERROR: ${err.message}`);
       }
 
-      // Test fallback endpoint
+      // Test Fallback endpoint
       results.push("\nChecking regular fallback endpoint...");
       try {
         const fallbackResponse = await fetch("/api/fallback", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Regular Fallback API Status: ${fallbackResponse.status}`);
 
-        const fallbackText = await fallbackResponse.text();
-        if (fallbackText.includes("<!DOCTYPE html>")) {
-          results.push("Fallback API returning HTML instead of JSON");
-          results.push(`HTML snippet: ${fallbackText.substring(0, 50)}...`);
-        } else {
-          results.push(`Fallback API Response: ${fallbackText}`);
+        try {
+          const fallbackText = await fallbackResponse.text();
+          if (fallbackText.includes("<!DOCTYPE html>")) {
+            results.push("Fallback API returning HTML instead of JSON");
+            results.push(`HTML snippet: ${fallbackText.substring(0, 50)}...`);
+          } else {
+            results.push(`Fallback API Response: ${fallbackText}`);
+          }
+        } catch (textErr) {
+          results.push(`Fallback API text extraction error: ${textErr}`);
         }
       } catch (err: any) {
         results.push(`Fallback API ERROR: ${err.message}`);
       }
       
-      // Test minimal endpoint
+      // Test new minimal endpoint
       results.push("\nChecking minimal endpoint with no dependencies...");
       try {
         const minimalResponse = await fetch("/api/minimal", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Minimal API Status: ${minimalResponse.status}`);
 
-        const minimalText = await minimalResponse.text();
-        if (minimalText.includes("<!DOCTYPE html>")) {
-          results.push("Minimal API returning HTML instead of JSON");
-          results.push(`HTML snippet: ${minimalText.substring(0, 50)}...`);
-        } else {
-          results.push(`Minimal API Response: ${minimalText}`);
+        try {
+          const minimalText = await minimalResponse.text();
+          if (minimalText.includes("<!DOCTYPE html>")) {
+            results.push("Minimal API returning HTML instead of JSON");
+            results.push(`HTML snippet: ${minimalText.substring(0, 50)}...`);
+          } else {
+            results.push(`Minimal API Response: ${minimalText}`);
+          }
+        } catch (textErr) {
+          results.push(`Minimal API text extraction error: ${textErr}`);
         }
       } catch (err: any) {
         results.push(`Minimal API ERROR: ${err.message}`);
@@ -191,15 +238,22 @@ export default function LoginPage() {
       try {
         const staticHealthRewrite = await fetch("/static-health", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Static Health Rewrite Status: ${staticHealthRewrite.status}`);
         const staticHealthRewriteText = await staticHealthRewrite.text();
         results.push(`Static Health Rewrite Response: ${staticHealthRewriteText}`);
         
+        // Also test the debug static file
         const staticDebugRewrite = await fetch("/static-debug", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Static Debug Rewrite Status: ${staticDebugRewrite.status}`);
         const staticDebugRewriteText = await staticDebugRewrite.text();
@@ -213,16 +267,23 @@ export default function LoginPage() {
       try {
         const debugResponse = await fetch("/api/debug", {
           method: "GET",
-          headers: { Accept: "application/json", "Cache-Control": "no-cache" },
+          headers: {
+            Accept: "application/json",
+            "Cache-Control": "no-cache",
+          },
         });
         results.push(`Debug API Status: ${debugResponse.status}`);
 
-        const debugText = await debugResponse.text();
-        if (debugText.includes("<!DOCTYPE html>")) {
-          results.push("Debug API returning HTML instead of JSON");
-          results.push(`HTML snippet: ${debugText.substring(0, 50)}...`);
-        } else {
-          results.push(`Debug API Response: ${debugText}`);
+        try {
+          const debugText = await debugResponse.text();
+          if (debugText.includes("<!DOCTYPE html>")) {
+            results.push("Debug API returning HTML instead of JSON");
+            results.push(`HTML snippet: ${debugText.substring(0, 50)}...`);
+          } else {
+            results.push(`Debug API Response: ${debugText}`);
+          }
+        } catch (textErr) {
+          results.push(`Debug API text extraction error: ${textErr}`);
         }
       } catch (err: any) {
         results.push(`Debug API ERROR: ${err.message}`);
@@ -239,26 +300,6 @@ export default function LoginPage() {
       setApiInfo(`Diagnostic error: ${error.message}`);
     }
   };
-
-  // Helper function to handle successful login
-  const handleSuccessfulLogin = (userData: any) => {
-    // Store auth data
-    localStorage.setItem("isLoggedIn", "true");
-    localStorage.setItem("username", username);
-    localStorage.setItem("userId", userData.user.id);
-    localStorage.setItem("userRole", userData.user.role || "user");
-    if (userData.token) {
-      localStorage.setItem("authToken", userData.token);
-    }
-    
-    // Use the auth context to manage login state
-    login(username, userData.user.id, userData.user.role);
-    console.log("Login successful, user ID:", userData.user.id);
-    
-    // Redirect to dashboard
-    router.push("/dashboard");
-  };
-
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError("");
@@ -278,7 +319,9 @@ export default function LoginPage() {
           // Call our API endpoint
           const response = await fetch("/api/auth/login", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+              "Content-Type": "application/json",
+            },
             body: JSON.stringify({ username, password }),
             cache: "no-store",
           });
@@ -292,13 +335,16 @@ export default function LoginPage() {
           }
 
           // Check if we received HTML instead of JSON
-          if (responseText.trim().startsWith("<!DOCTYPE html>") || responseText.includes("<html")) {
+          if (
+            responseText.trim().startsWith("<!DOCTYPE html>") ||
+            responseText.includes("<html")
+          ) {
             console.error("Received HTML instead of JSON, falling back to static auth");
             throw new Error("HTML response received");
           }
 
           // Try to parse JSON
-          const data = JSON.parse(responseText);
+          let data = JSON.parse(responseText);
 
           if (response.ok && data.success) {
             // Login successful via API
@@ -313,7 +359,14 @@ export default function LoginPage() {
           console.log("API login failed, using fallback static authentication:", apiError);
           
           // FALLBACK: Use static authentication when API fails
-          const user = STATIC_USERS[username as keyof typeof STATIC_USERS];
+          // This is our emergency authentication system when API routes fail
+          const staticUsers = {
+            admin: { id: "1", password: "password123", role: "admin" },
+            cashier: { id: "2", password: "cashier123", role: "cashier" },
+            manager: { id: "3", password: "manager123", role: "manager" }
+          };
+          
+          const user = staticUsers[username as keyof typeof staticUsers];
           
           if (user && user.password === password) {
             // Static authentication successful
@@ -347,10 +400,93 @@ export default function LoginPage() {
     }
     setIsLoading(false);
   };
+  
+  // Helper function to handle successful login
+  const handleSuccessfulLogin = (data: any) => {
+    // Store auth data
+    localStorage.setItem("isLoggedIn", "true");
+    localStorage.setItem("username", username);
+    localStorage.setItem("userId", data.user.id);
+    localStorage.setItem("userRole", data.user.role || "user");
+    if (data.token) {
+      localStorage.setItem("authToken", data.token);
+    }
+    
+    // Use the auth context to manage login state
+    login(username, data.user.id);
+    console.log("Login successful, user ID:", data.user.id);
+    
+    // Redirect to dashboard
+    router.push("/dashboard");
+  };
+
+  // Fallback function when all else fails
+  const emergencyLogin = () => {
+    setLoginError("");
+            data.error || "Username atau password salah. Silakan coba lagi."
+          );
+        }
+      } catch (error: any) {
+        console.error("Login error:", error);
+        // Pastikan tidak ada data autentikasi yang tersisa jika terjadi error
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("username");
+        localStorage.removeItem("userId");
+
+        // Clear cookies
+        document.cookie = "isLoggedIn=; path=/; max-age=0";
+        document.cookie = "username=; path=/; max-age=0";
+        document.cookie = "userId=; path=/; max-age=0";
+
+        // Provide more detailed error message for debugging
+        let errorMessage = "Terjadi kesalahan saat login. ";
+
+        if (error.message) {
+          if (
+            error.message.includes("Failed to fetch") ||
+            error.message.includes("NetworkError")
+          ) {
+            errorMessage +=
+              "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
+          } else if (error.message.includes("405")) {
+            errorMessage +=
+              "Kesalahan konfigurasi API (405 Method Not Allowed). Hubungi administrator.";
+          } else if (error.message.includes("JSON")) {
+            errorMessage +=
+              "Format respons tidak valid. Hubungi administrator.";
+          } else {
+            errorMessage += error.message;
+          }
+        } else {
+          errorMessage += "Silakan coba lagi nanti.";
+        }
+
+        setLoginError(errorMessage);
+
+        // Diagnostic information
+        try {
+          // Test API health directly
+          fetch("/api/health", { method: "GET" })
+            .then((res) => res.json())
+            .then((data) => {
+              setApiInfo(`API Health Status: ${JSON.stringify(data)}`);
+            })
+            .catch((healthErr) => {
+              setApiInfo(`API Health Check Failed: ${healthErr.message}`);
+            });
+        } catch (diagErr) {
+          setApiInfo(`Diagnostic error: ${diagErr}`);
+        }
+      }
+    }
+
+    setIsLoading(false);
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
+        {" "}
         <CardHeader className="space-y-1">
           <div className="flex justify-center mb-4">
             <Image
@@ -387,7 +523,7 @@ export default function LoginPage() {
                   validateUsername(e.target.value);
                   setLoginError("");
                 }}
-                required
+                disabled={isLoading}
               />
               {usernameError && (
                 <p className="text-sm text-red-500">{usernameError}</p>
@@ -406,70 +542,76 @@ export default function LoginPage() {
                     validatePassword(e.target.value);
                     setLoginError("");
                   }}
-                  required
-                  className="pr-10" 
+                  disabled={isLoading}
+                  className="pr-10"
                 />
-                <button
+                <Button
                   type="button"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                   onClick={() => setShowPassword(!showPassword)}
-                  tabIndex={-1}
+                  disabled={isLoading}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
+                    <EyeOff className="h-4 w-4 text-gray-500" />
                   ) : (
-                    <Eye className="h-5 w-5" />
+                    <Eye className="h-4 w-4 text-gray-500" />
                   )}
-                </button>
+                  <span className="sr-only">
+                    {showPassword ? "Hide password" : "Show password"}
+                  </span>
+                </Button>
               </div>
               {passwordError && (
                 <p className="text-sm text-red-500">{passwordError}</p>
               )}
-            </div>
+            </div>{" "}
             <Button
               type="submit"
-              className="w-full"
+              className="w-full bg-violet-500 hover:bg-violet-600 transition-colors"
               disabled={isLoading}
             >
-              {isLoading ? "Processing..." : "Login"}
+              {isLoading ? "Memproses..." : "Login"}
             </Button>
+            <div className="mt-4 flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={runDiagnostics}
+                className="text-xs"
+              >
+                <Bug className="mr-2 h-3 w-3" />
+                Run Diagnostics
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowDiagnostics(!showDiagnostics)}
+                className="text-xs"
+              >
+                {showDiagnostics ? (
+                  <ChevronUp className="mr-2 h-3 w-3" />
+                ) : (
+                  <ChevronDown className="mr-2 h-3 w-3" />
+                )}
+                {showDiagnostics ? "Hide Details" : "Show Details"}
+              </Button>
+            </div>
+            {(apiInfo || showDiagnostics) && (
+              <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-2 rounded-md">
+                <p className="font-semibold">
+                  Debug Information (Developer Only):
+                </p>
+                <pre className="break-all whitespace-pre-wrap">
+                  {apiInfo || "Click 'Run Diagnostics' to test API endpoints"}
+                </pre>
+              </div>
+            )}
           </form>
         </CardContent>
-        <CardFooter>
-          <div className="w-full text-center">
-            <div className="text-sm text-gray-500 mt-2">
-              For testing: username: admin, password: password123
-            </div>
-            <div className="text-sm text-gray-500 mt-2">
-              <button
-                type="button"
-                className="flex items-center mx-auto text-xs text-blue-600 hover:underline"
-                onClick={() => {
-                  setShowDiagnostics(!showDiagnostics);
-                  if (!showDiagnostics) {
-                    runDiagnostics();
-                  }
-                }}
-              >
-                <Bug className="h-3 w-3 mr-1" />
-                {showDiagnostics ? (
-                  <>
-                    Hide Debug Info <ChevronUp className="h-3 w-3 ml-1" />
-                  </>
-                ) : (
-                  <>
-                    Show Debug Info <ChevronDown className="h-3 w-3 ml-1" />
-                  </>
-                )}
-              </button>
-              {showDiagnostics && apiInfo && (
-                <pre className="mt-4 p-2 bg-gray-100 border border-gray-300 rounded text-xs text-left whitespace-pre-wrap overflow-auto max-h-96">
-                  <code>{apiInfo}</code>
-                </pre>
-              )}
-            </div>
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );
