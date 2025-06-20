@@ -1,11 +1,11 @@
-// A simple endpoint for diagnosing production issues
+// Minimalist API endpoint with no dependencies at all
+
 export function GET() {
   return new Response(
     JSON.stringify({
       status: "ok",
       time: new Date().toISOString(),
-      env: process.env.NODE_ENV || "unknown",
-      apiVersion: "1.0.0",
+      message: "Minimal API endpoint with no dependencies"
     }),
     {
       status: 200,
@@ -21,7 +21,7 @@ export function GET() {
 
 export function OPTIONS() {
   return new Response(null, {
-    status: 204, // No content
+    status: 204,
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, OPTIONS",

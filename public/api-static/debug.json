@@ -1,0 +1,7 @@
+{
+  "status": "ok",
+  "time": "2025-06-21T12:00:00Z",
+  "message": "This is a static debug JSON file",
+  "env": "static_file",
+  "purpose": "Testing if static JSON files can be served correctly"
+}

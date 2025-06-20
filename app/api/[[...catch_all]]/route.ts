@@ -2,18 +2,15 @@
 
 // Helper function to create a standard 404 response
 function createNotFoundResponse() {
-  return new Response(
-    JSON.stringify({ error: "Not found", status: 404 }),
-    {
-      status: 404,
-      headers: {
-        "Content-Type": "application/json",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-      }
-    }
-  );
+  return new Response(JSON.stringify({ error: "Not found", status: 404 }), {
+    status: 404,
+    headers: {
+      "Content-Type": "application/json",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
+  });
 }
 
 export function GET() {
@@ -42,7 +39,7 @@ export function OPTIONS() {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization"
-    }
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
   });
 }

@@ -7,5 +7,27 @@
   "cleanUrls": true,
   "env": {
     "NODE_OPTIONS": "--legacy-peer-deps"
-  }
+  },
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, PUT, DELETE, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    },
+    {
+      "source": "/api-static/(.*)",
+      "headers": [
+        { "key": "Content-Type", "value": "application/json" },
+        { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    }
+  ],  "rewrites": [
+    { "source": "/static-health", "destination": "/api-static/health.json" },
+    { "source": "/static-login", "destination": "/api-static/test-login.json" },
+    { "source": "/static-fallback", "destination": "/api-static/fallback.json" },
+    { "source": "/static-debug", "destination": "/api-static/debug.json" }
+  ]
 }

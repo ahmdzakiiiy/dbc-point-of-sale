@@ -12,8 +12,8 @@ export async function GET(request: Request) {
           "Content-Type": "application/json",
           "Access-Control-Allow-Origin": "*",
           "Access-Control-Allow-Methods": "GET, OPTIONS",
-          "Access-Control-Allow-Headers": "Content-Type, Authorization"
-        }
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        },
       }
     );
   } catch (error) {
@@ -21,7 +21,7 @@ export async function GET(request: Request) {
     // Return a very basic response that should work no matter what
     return new Response('{"status":"error"}', {
       status: 200,
-      headers: {"Content-Type": "application/json"}
+      headers: { "Content-Type": "application/json" },
     });
   }
 }
@@ -33,7 +33,7 @@ export async function OPTIONS(request: Request) {
     headers: {
       "Access-Control-Allow-Origin": "*",
       "Access-Control-Allow-Methods": "GET, OPTIONS",
-      "Access-Control-Allow-Headers": "Content-Type, Authorization"
-    }
+      "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    },
   });
 }
