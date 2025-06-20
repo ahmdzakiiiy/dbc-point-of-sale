@@ -54,45 +54,35 @@ export default function LoginPage() {
   const runDiagnostics = async () => {
     setApiInfo("Running diagnostics...");
     let results = [];
-
+    
     try {
       // Test Health Endpoint
-      const healthResponse = await fetch("/api/health", {
+      const healthResponse = await fetch("/api/health", { 
         method: "GET",
         cache: "no-store",
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json" }
       });
       const healthData = await healthResponse.json();
-      results.push(
-        `Health API: ${healthResponse.status} - ${JSON.stringify(
-          healthData
-        ).slice(0, 50)}...`
-      );
-
+      results.push(`Health API: ${healthResponse.status} - ${JSON.stringify(healthData).slice(0, 50)}...`);
+      
       // Test Alternative Login Endpoint
       const testLoginResponse = await fetch("/api/test/login", {
         method: "POST",
         cache: "no-store",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ test: true }),
+        body: JSON.stringify({ test: true })
       });
       const testLoginData = await testLoginResponse.json();
-      results.push(
-        `Test Login API: ${testLoginResponse.status} - ${JSON.stringify(
-          testLoginData
-        ).slice(0, 50)}...`
-      );
-
+      results.push(`Test Login API: ${testLoginResponse.status} - ${JSON.stringify(testLoginData).slice(0, 50)}...`);
+      
       // Test Real Login Endpoint with OPTIONS
       const optionsResponse = await fetch("/api/auth/login", {
         method: "OPTIONS",
-        cache: "no-store",
+        cache: "no-store"
       });
-      results.push(
-        `Login OPTIONS: ${optionsResponse.status} - ${optionsResponse.statusText}`
-      );
-
-      setApiInfo(results.join("\n"));
+      results.push(`Login OPTIONS: ${optionsResponse.status} - ${optionsResponse.statusText}`);
+      
+      setApiInfo(results.join('\n'));
     } catch (error: any) {
       setApiInfo(`Diagnostic error: ${error.message}`);
     }
@@ -111,7 +101,7 @@ export default function LoginPage() {
     if (username.length >= 3 && password.length >= 8) {
       try {
         console.log("Attempting to login with username:", username);
-
+        
         // Call our API endpoint
         const response = await fetch("/api/auth/login", {
           method: "POST",
@@ -119,32 +109,30 @@ export default function LoginPage() {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ username, password }),
-          cache: "no-store",
+          cache: "no-store"
         });
-
+        
         console.log("Login response status:", response.status);
-
+        
         if (response.status === 405) {
           throw new Error("API route method not allowed. Check server configuration.");
         }
-
+        
         // Check for empty response
         const responseText = await response.text();
         if (!responseText) {
           throw new Error("Empty response received from server");
         }
-
+        
         // Try to parse JSON
         let data;
         try {
           data = JSON.parse(responseText);
         } catch (parseError) {
           console.error("Failed to parse JSON response:", parseError);
-          throw new Error(
-            `Invalid JSON response: ${responseText.substring(0, 100)}...`
-          );
+          throw new Error(`Invalid JSON response: ${responseText.substring(0, 100)}...`);
         }
-
+        
         if (response.ok) {
           // Use the auth context to manage login state
           login(username, data.user.id);
@@ -192,12 +180,9 @@ export default function LoginPage() {
 
         // Provide more detailed error message for debugging
         let errorMessage = "Terjadi kesalahan saat login. ";
-
+        
         if (error.message) {
-          if (
-            error.message.includes("Failed to fetch") ||
-            error.message.includes("NetworkError")
-          ) {
+          if (error.message.includes("Failed to fetch") || error.message.includes("NetworkError")) {
             errorMessage += "Tidak dapat terhubung ke server. Periksa koneksi internet Anda.";
           } else if (error.message.includes("405")) {
             errorMessage += "Kesalahan konfigurasi API (405 Method Not Allowed). Hubungi administrator.";
@@ -209,23 +194,11 @@ export default function LoginPage() {
         } else {
           errorMessage += "Silakan coba lagi nanti.";
         }
-
+        
         setLoginError(errorMessage);
-
-        // Diagnostic information
-        try {
-          // Test API health directly
-          fetch("/api/health", { method: "GET" })
-            .then((res) => res.json())
-            .then((data) => {
-              setApiInfo(`API Health Status: ${JSON.stringify(data)}`);
-            })
-            .catch((healthErr) => {
-              setApiInfo(`API Health Check Failed: ${healthErr.message}`);
-            });
-        } catch (diagErr) {
-          setApiInfo(`Diagnostic error: ${diagErr}`);
-        }
+        
+        // Run diagnostics when login fails
+        runDiagnostics();
       }
     }
 
@@ -318,6 +291,7 @@ export default function LoginPage() {
                 <p className="text-sm text-red-500">{passwordError}</p>
               )}
             </div>
+
             <Button
               type="submit"
               className="w-full bg-violet-500 hover:bg-violet-600 transition-colors"
@@ -325,15 +299,55 @@ export default function LoginPage() {
             >
               {isLoading ? "Memproses..." : "Login"}
             </Button>
-
-            {apiInfo && (
-              <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-2 rounded-md">
-                <p className="font-semibold">Debug Information (Developer Only):</p>
-                <p className="break-all">{apiInfo}</p>
-              </div>
-            )}
+            
+            <div className="text-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowDiagnostics(!showDiagnostics);
+                  if (!showDiagnostics && !apiInfo) {
+                    runDiagnostics();
+                  }
+                }}
+                className="text-xs flex items-center gap-1 mx-auto mt-2"
+              >
+                <Bug className="h-3 w-3 text-gray-400" />
+                {showDiagnostics ? "Hide" : "Show"} Diagnostics
+                {showDiagnostics ? (
+                  <ChevronUp className="h-3 w-3 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-3 w-3 text-gray-400" />
+                )}
+              </Button>
+              
+              {showDiagnostics && (
+                <div className="mt-4 text-xs text-gray-500 bg-gray-50 p-2 rounded-md">
+                  <p className="font-semibold mb-2">API Diagnostics:</p>
+                  <pre className="whitespace-pre-wrap break-all text-left">
+                    {apiInfo || "No diagnostic data available. Click 'Run Diagnostics'."}
+                  </pre>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={runDiagnostics}
+                    className="text-xs mt-2 w-full"
+                    disabled={isLoading}
+                  >
+                    Run Diagnostics
+                  </Button>
+                </div>
+              )}
+            </div>
           </form>
         </CardContent>
+        <CardFooter className="text-xs text-center text-gray-500 pt-0">
+          <p className="w-full">
+            © {new Date().getFullYear()} Daster Bordir Cantik • Version 1.0.0
+          </p>
+        </CardFooter>
       </Card>
     </div>
   );

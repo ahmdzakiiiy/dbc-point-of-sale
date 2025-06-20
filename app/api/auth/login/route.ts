@@ -2,6 +2,18 @@ import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 import { cookies } from "next/headers";
 
+// Handle OPTIONS request for CORS
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "POST, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    },
+  });
+}
+
 // For API route security, basic check for username/password during development
 // In production, use proper authentication with hashed passwords
 export async function POST(request: Request) {
@@ -58,13 +70,20 @@ export async function POST(request: Request) {
       const cookieStore = cookies();
       cookieStore.set("isLoggedIn", "true", { path: "/", maxAge: 86400 });
       cookieStore.set("username", username, { path: "/", maxAge: 86400 });
-      cookieStore.set("userId", userId, { path: "/", maxAge: 86400 });
-
-      // Return user info for client-side use
-      return NextResponse.json({
-        success: true,
-        user: { username, id: userId },
-      });
+      cookieStore.set("userId", userId, { path: "/", maxAge: 86400 });      // Return user info for client-side use
+      return NextResponse.json(
+        {
+          success: true,
+          user: { username, id: userId },
+        },
+        {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization"
+          }
+        }
+      );
     } else {
       // Credentials don't match
       return NextResponse.json(
