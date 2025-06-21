@@ -1,0 +1,11 @@
+{
+  "product": {
+    "id": "4",
+    "name": "Daster Polos Casual",
+    "stock": 30,
+    "price": 65000,
+    "image_url": "/placeholder.svg",
+    "created_at": "2025-06-04T00:00:00.000Z",
+    "updated_at": "2025-06-21T00:00:00.000Z"
+  }
+}

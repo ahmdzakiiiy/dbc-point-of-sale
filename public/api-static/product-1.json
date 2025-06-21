@@ -1,0 +1,11 @@
+{
+  "product": {
+    "id": "1",
+    "name": "Daster Bordir Bunga",
+    "stock": 25,
+    "price": 85000,
+    "image_url": "/placeholder.svg",
+    "created_at": "2025-06-01T00:00:00.000Z",
+    "updated_at": "2025-06-21T00:00:00.000Z"
+  }
+}
