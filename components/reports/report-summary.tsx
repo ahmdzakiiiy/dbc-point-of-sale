@@ -1,5 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatCurrency, FormattedTransaction, formatMonth } from "./report-utils";
+import {
+  formatCurrency,
+  FormattedTransaction,
+  formatMonth,
+} from "./report-utils";
 
 interface ReportSummaryProps {
   transactions: FormattedTransaction[];
@@ -9,12 +13,12 @@ interface ReportSummaryProps {
   grossAmount: number;
 }
 
-export function ReportSummary({ 
-  transactions, 
-  date, 
-  totalAmount, 
-  totalDiscount, 
-  grossAmount 
+export function ReportSummary({
+  transactions,
+  date,
+  totalAmount,
+  totalDiscount,
+  grossAmount,
 }: ReportSummaryProps) {
   return (
     <Card className="mb-3 sm:mb-4 md:mb-6 shadow-sm">

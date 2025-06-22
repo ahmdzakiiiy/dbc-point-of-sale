@@ -8,7 +8,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Loader2 } from "lucide-react";
-import { formatCurrency, formatDate, FormattedTransaction } from "./report-utils";
+import {
+  formatCurrency,
+  formatDate,
+  FormattedTransaction,
+} from "./report-utils";
 
 interface TransactionListProps {
   transactions: FormattedTransaction[];
@@ -16,10 +20,10 @@ interface TransactionListProps {
   error: string | null;
 }
 
-export function TransactionList({ 
-  transactions, 
-  loading, 
-  error 
+export function TransactionList({
+  transactions,
+  loading,
+  error,
 }: TransactionListProps) {
   return (
     <Card className="shadow-sm">

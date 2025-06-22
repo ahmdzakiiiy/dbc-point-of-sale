@@ -8,7 +8,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDate, formatMonth, FormattedTransaction } from "./report-utils";
+import {
+  formatCurrency,
+  formatDate,
+  formatMonth,
+  FormattedTransaction,
+} from "./report-utils";
 
 interface PDFPreviewProps {
   open: boolean;
@@ -32,13 +37,11 @@ export function PDFPreview({
   onConfirmDownload,
 }: PDFPreviewProps) {
   if (!date) return null;
-  
+
   // Calculate average
   const averagePerTransaction =
-    transactions.length > 0
-      ? Math.round(totalAmount / transactions.length)
-      : 0;
-  
+    transactions.length > 0 ? Math.round(totalAmount / transactions.length) : 0;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[95%] md:max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -78,9 +81,7 @@ export function PDFPreview({
                 <div className="grid grid-cols-2 gap-2 sm:gap-4 text-xs sm:text-sm">
                   <div className="flex justify-between">
                     <span>Total Transaksi:</span>
-                    <span className="font-medium">
-                      {transactions.length}
-                    </span>
+                    <span className="font-medium">{transactions.length}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Rata-rata per Transaksi:</span>
@@ -134,7 +135,9 @@ export function PDFPreview({
                     <tbody>
                       {transactions.slice(0, 10).map((transaction, index) => (
                         <tr key={transaction.id} className="border-b">
-                          <td className="p-1 sm:p-2 text-center">{index + 1}</td>
+                          <td className="p-1 sm:p-2 text-center">
+                            {index + 1}
+                          </td>
                           <td className="p-1 sm:p-2 text-center">
                             {transaction.id.substring(0, 8)}...
                           </td>
@@ -179,17 +182,24 @@ export function PDFPreview({
               <div className="text-xs sm:text-sm space-y-1">
                 <p>Daster Bordir Cantik</p>
                 <p>Jl. Perintis Kemerdekaan, Permata Regency Blok B No. 8</p>
-                <p>Karsamenak, Kec. Tamansari, Kota. Tasikmalaya, Jawa Barat 46182</p>
+                <p>
+                  Karsamenak, Kec. Tamansari, Kota. Tasikmalaya, Jawa Barat
+                  46182
+                </p>
                 <p>Telepon: 0821-1931-5212</p>
               </div>
               <div className="mt-4 text-xs text-muted-foreground">
                 <p>
-                  Laporan ini dibuat secara otomatis oleh sistem POS Daster Bordir Cantik
+                  Laporan ini dibuat secara otomatis oleh sistem POS Daster
+                  Bordir Cantik
                 </p>
                 <p>
-                  {formatDate(new Date())} {new Date().toLocaleTimeString("id-ID")}
+                  {formatDate(new Date())}{" "}
+                  {new Date().toLocaleTimeString("id-ID")}
                 </p>
-                <p className="mt-2">© 2024 Daster Bordir Cantik. All rights reserved.</p>
+                <p className="mt-2">
+                  © 2024 Daster Bordir Cantik. All rights reserved.
+                </p>
               </div>
             </div>
           </div>
@@ -207,7 +217,8 @@ export function PDFPreview({
               className="text-xs sm:text-sm"
             >
               Tutup
-            </Button>            <Button
+            </Button>{" "}
+            <Button
               onClick={onConfirmDownload}
               variant="default"
               size="sm"
