@@ -48,37 +48,62 @@ export function generatePDFReport({
     align: "center",
   });
   doc.line(20, 58, 190, 58);
-
-  // Create two columns for summary data
+  // Create summary data in table format
   doc.setFontSize(12);
   
-  // Left column labels
-  doc.text("Total Transaksi:", 40, 65, { align: "right" });
-  doc.text("Total Penjualan Kotor:", 40, 72, { align: "right" });
-  doc.text("Total Diskon:", 40, 79, { align: "right" });
-  doc.text("Total Pendapatan Bersih:", 40, 86, { align: "right" });
-  doc.text("Rata-rata per Transaksi:", 40, 93, { align: "right" });
+  // Column positions
+  const leftCol = 70;    // Label column position (center of column)
+  const rightCol = 140;  // Value column position (center of column)
+  const rowHeight = 7;   // Height between rows
   
-  // Right column values with center alignment
-  doc.text(`${transactions.length}`, 45, 65, { align: "left" });
-  doc.text(`Rp ${formatCurrency(grossAmount)}`, 45, 72, { align: "left" });
-  doc.text(`Rp ${formatCurrency(totalDiscount)}`, 45, 79, { align: "left" });
-  doc.text(`Rp ${formatCurrency(totalAmount)}`, 45, 86, { align: "left" });
+  // Table headers with center alignment
+  doc.text("Informasi", leftCol, 65, { align: "center" });
+  doc.text("Nilai", rightCol, 65, { align: "center" });
   
+  // Draw a line below headers
+  doc.line(20, 68, 190, 68);
+  
+  // Table data rows
+  let rowY = 75;  // Starting Y position for data rows
+  
+  // Row 1: Total Transaksi
+  doc.text("Total Transaksi", leftCol, rowY, { align: "center" });
+  doc.text(`${transactions.length}`, rightCol, rowY, { align: "center" });
+  rowY += rowHeight;
+  
+  // Row 2: Total Penjualan Kotor
+  doc.text("Total Penjualan Kotor", leftCol, rowY, { align: "center" });
+  doc.text(`Rp ${formatCurrency(grossAmount)}`, rightCol, rowY, { align: "center" });
+  rowY += rowHeight;
+  
+  // Row 3: Total Diskon
+  doc.text("Total Diskon", leftCol, rowY, { align: "center" });
+  doc.text(`Rp ${formatCurrency(totalDiscount)}`, rightCol, rowY, { align: "center" });
+  rowY += rowHeight;
+  
+  // Row 4: Total Pendapatan Bersih
+  doc.text("Total Pendapatan Bersih", leftCol, rowY, { align: "center" });
+  doc.text(`Rp ${formatCurrency(totalAmount)}`, rightCol, rowY, { align: "center" });
+  rowY += rowHeight;
+  
+  // Row 5: Rata-rata per Transaksi
   const avgPerTransaction =
     transactions.length > 0
       ? Math.round(totalAmount / transactions.length)
       : 0;
-      
-  doc.text(`Rp ${formatCurrency(avgPerTransaction)}`, 45, 93, { align: "left" });
-
-  // Add transaction details
+  
+  doc.text("Rata-rata per Transaksi", leftCol, rowY, { align: "center" });
+  doc.text(`Rp ${formatCurrency(avgPerTransaction)}`, rightCol, rowY, { align: "center" });
+  rowY += rowHeight;
+  
+  // Draw a line below the table
+  doc.line(20, rowY, 190, rowY);
+  // Add transaction details - with extra spacing
   doc.setFontSize(14);
-  doc.text("DETAIL TRANSAKSI", 105, 107, { align: "center" });
-  doc.line(20, 110, 190, 110);
-
+  doc.text("DETAIL TRANSAKSI", 105, 115, { align: "center" }); // Increased Y position from 107 to 115
+  doc.line(20, 118, 190, 118); // Increased Y position from 110 to 118
   doc.setFontSize(12);
-  let yPos = 118;
+  let yPos = 126; // Increased from 118 to 126 to match the new line position
   
   if (transactions.length === 0) {
     doc.text("Tidak ada transaksi pada bulan yang dipilih", 105, yPos, { align: "center" });

@@ -108,10 +108,9 @@ export default function ReportsPage() {
                   initialFocus
                 />
               </PopoverContent>
-            </Popover>            <div className="flex gap-2 w-full md:w-auto">
-              <Button
+            </Popover>            <div className="flex gap-2 w-full md:w-auto">              <Button
                 onClick={openPdfPreview}
-                className="text-xs sm:text-sm h-8 sm:h-10 w-full md:w-auto"
+                className="text-xs sm:text-sm h-8 sm:h-10 w-full md:w-auto bg-violet-500 hover:bg-violet-600"
               >
                 <FileText className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
                 Cetak

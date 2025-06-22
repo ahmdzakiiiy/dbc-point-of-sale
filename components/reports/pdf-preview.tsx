@@ -207,12 +207,11 @@ export function PDFPreview({
               className="text-xs sm:text-sm"
             >
               Tutup
-            </Button>
-            <Button
+            </Button>            <Button
               onClick={onConfirmDownload}
               variant="default"
               size="sm"
-              className="text-xs sm:text-sm"
+              className="text-xs sm:text-sm bg-violet-500 hover:bg-violet-600"
             >
               Unduh PDF
             </Button>
