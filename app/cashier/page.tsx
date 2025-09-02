@@ -396,6 +396,13 @@ export default function CashierPage() {
     const existingItem = cart.find((item) => item.id === product.id);
 
     if (existingItem) {
+      // Check if adding one more would exceed available stock
+      if (existingItem.quantity + 1 > product.stock) {
+        // Show an alert that stock limit is reached
+        alert(`Maaf, stok produk "${product.name}" hanya tersisa ${product.stock}`);
+        return;
+      }
+      
       setCart(
         cart.map((item) =>
           item.id === product.id
@@ -420,6 +427,18 @@ export default function CashierPage() {
       // Remove item from cart
       setCart(cart.filter((item) => item.id !== id));
     } else {
+      // Find the product to check stock
+      const product = products.find(product => product.id === id);
+      const cartItem = cart.find(item => item.id === id);
+      
+      if (product && cartItem) {
+        // Check if the requested quantity exceeds available stock
+        if (quantity > product.stock) {
+          alert(`Maaf, stok produk "${cartItem.name}" hanya tersisa ${product.stock}`);
+          return;
+        }
+      }
+      
       // Update quantity
       setCart(
         cart.map((item) => (item.id === id ? { ...item, quantity } : item))
@@ -479,6 +498,22 @@ export default function CashierPage() {
     setIsProcessing(true);
 
     try {
+      // First, validate all items have sufficient stock before proceeding
+      for (const item of cart) {
+        const product = products.find(p => p.id === item.id);
+        if (!product) {
+          alert(`Error: Produk dengan ID ${item.id} tidak ditemukan.`);
+          setIsProcessing(false);
+          return;
+        }
+        
+        if (item.quantity > product.stock) {
+          alert(`Maaf, stok produk "${item.name}" tidak mencukupi. Tersedia: ${product.stock}, Di keranjang: ${item.quantity}`);
+          setIsProcessing(false);
+          return;
+        }
+      }
+
       const subtotal = calculateSubtotal();
       // Pastikan discount selalu memiliki format yang konsisten untuk server
       const discount = discountApplied
@@ -989,13 +1024,24 @@ export default function CashierPage() {
                                 </span>{" "}
                                 <span
                                   className={`text-xs font-medium ${
-                                    product.stock < 5
+                                    product.stock === 0
                                       ? "text-red-500"
+                                      : product.stock < 5
+                                      ? "text-amber-500"
                                       : "text-gray-700"
                                   }`}
                                 >
                                   {product.stock}
                                 </span>{" "}
+                                {product.stock < 5 && (
+                                  <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
+                                    product.stock === 0
+                                      ? "bg-red-100 text-red-600"
+                                      : "bg-amber-100 text-amber-600"
+                                  }`}>
+                                    {product.stock === 0 ? "Habis" : "Terbatas"}
+                                  </span>
+                                )}
                               </div>
                             </div>
 
@@ -1058,28 +1104,48 @@ export default function CashierPage() {
                           <TableRow key={item.id}>
                             <TableCell>{item.name}</TableCell>
                             <TableCell className="text-center">
-                              <div className="flex items-center justify-center space-x-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() =>
-                                    updateQuantity(item.id, item.quantity - 1)
+                              <div className="flex flex-col items-center justify-center">
+                                <div className="flex items-center justify-center space-x-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() =>
+                                      updateQuantity(item.id, item.quantity - 1)
+                                    }
+                                  >
+                                    -
+                                  </Button>
+                                  <span>{item.quantity}</span>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-6 w-6 p-0"
+                                    onClick={() =>
+                                      updateQuantity(item.id, item.quantity + 1)
+                                    }
+                                    disabled={(() => {
+                                      // Find the product to check current stock
+                                      const product = products.find(p => p.id === item.id);
+                                      return product ? item.quantity >= product.stock : false;
+                                    })()}
+                                  >
+                                    +
+                                  </Button>
+                                </div>
+                                {(() => {
+                                  // Check remaining stock
+                                  const product = products.find(p => p.id === item.id);
+                                  if (product && product.stock > 0) {
+                                    const stockLeft = product.stock - item.quantity;
+                                    if (stockLeft === 0) {
+                                      return <span className="text-xs text-red-500 mt-1">Stok maksimum</span>;
+                                    } else if (stockLeft <= 3) {
+                                      return <span className="text-xs text-amber-500 mt-1">Sisa {stockLeft}</span>;
+                                    }
                                   }
-                                >
-                                  -
-                                </Button>
-                                <span>{item.quantity}</span>
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                  onClick={() =>
-                                    updateQuantity(item.id, item.quantity + 1)
-                                  }
-                                >
-                                  +
-                                </Button>
+                                  return null;
+                                })()}
                               </div>
                             </TableCell>
                             <TableCell>
