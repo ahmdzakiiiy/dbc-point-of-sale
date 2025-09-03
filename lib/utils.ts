@@ -7,10 +7,10 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Format a transaction ID to be displayed in the UI
- * Returns a shortened version (first 6 characters + "...")
+ * Returns a shortened version (first 4 characters + "...")
  */
 export function formatTransactionId(id: string): string {
-  return `${id.substring(0, 6)}...`;
+  return `${id.substring(0, 4)}...`;
 }
 
 /**

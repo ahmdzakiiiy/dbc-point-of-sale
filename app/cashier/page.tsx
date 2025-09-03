@@ -591,7 +591,7 @@ export default function CashierPage() {
 
       console.log(
         "✅ Transaksi berhasil disimpan dengan ID:",
-        transactionWithDateObj.id
+        formatTransactionId(transactionWithDateObj.id)
       );
 
       // Update products stock if API returned updated products
@@ -1748,7 +1748,7 @@ export default function CashierPage() {
               <DialogDescription>
                 ID Transaksi:{" "}
                 <span className="font-mono font-medium">
-                  {selectedTransaction?.id}
+                  {formatTransactionId(selectedTransaction?.id || "")}
                 </span>
               </DialogDescription>
             </DialogHeader>
