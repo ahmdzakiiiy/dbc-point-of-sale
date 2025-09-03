@@ -1,6 +1,22 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
+}
+
+/**
+ * Format a transaction ID to be displayed in the UI
+ * Returns a shortened version (first 6 characters + "...")
+ */
+export function formatTransactionId(id: string): string {
+  return `${id.substring(0, 6)}...`;
+}
+
+/**
+ * Get a shortened transaction ID for filename purposes
+ * Returns the first 8 characters without ellipsis
+ */
+export function getShortTransactionId(id: string): string {
+  return id.substring(0, 8);
 }

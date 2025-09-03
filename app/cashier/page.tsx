@@ -5,6 +5,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import Image from "next/image";
+import { formatTransactionId, getShortTransactionId } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -399,10 +400,12 @@ export default function CashierPage() {
       // Check if adding one more would exceed available stock
       if (existingItem.quantity + 1 > product.stock) {
         // Show an alert that stock limit is reached
-        alert(`Maaf, stok produk "${product.name}" hanya tersisa ${product.stock}`);
+        alert(
+          `Maaf, stok produk "${product.name}" hanya tersisa ${product.stock}`
+        );
         return;
       }
-      
+
       setCart(
         cart.map((item) =>
           item.id === product.id
@@ -428,17 +431,19 @@ export default function CashierPage() {
       setCart(cart.filter((item) => item.id !== id));
     } else {
       // Find the product to check stock
-      const product = products.find(product => product.id === id);
-      const cartItem = cart.find(item => item.id === id);
-      
+      const product = products.find((product) => product.id === id);
+      const cartItem = cart.find((item) => item.id === id);
+
       if (product && cartItem) {
         // Check if the requested quantity exceeds available stock
         if (quantity > product.stock) {
-          alert(`Maaf, stok produk "${cartItem.name}" hanya tersisa ${product.stock}`);
+          alert(
+            `Maaf, stok produk "${cartItem.name}" hanya tersisa ${product.stock}`
+          );
           return;
         }
       }
-      
+
       // Update quantity
       setCart(
         cart.map((item) => (item.id === id ? { ...item, quantity } : item))
@@ -500,15 +505,17 @@ export default function CashierPage() {
     try {
       // First, validate all items have sufficient stock before proceeding
       for (const item of cart) {
-        const product = products.find(p => p.id === item.id);
+        const product = products.find((p) => p.id === item.id);
         if (!product) {
           alert(`Error: Produk dengan ID ${item.id} tidak ditemukan.`);
           setIsProcessing(false);
           return;
         }
-        
+
         if (item.quantity > product.stock) {
-          alert(`Maaf, stok produk "${item.name}" tidak mencukupi. Tersedia: ${product.stock}, Di keranjang: ${item.quantity}`);
+          alert(
+            `Maaf, stok produk "${item.name}" tidak mencukupi. Tersedia: ${product.stock}, Di keranjang: ${item.quantity}`
+          );
           setIsProcessing(false);
           return;
         }
@@ -743,8 +750,8 @@ export default function CashierPage() {
 
     // Transaction details
     doc.setFontSize(8);
-    doc.text(`ID Transaksi: ${receiptTransaction.id}`, margin, y);
-    y += 4; // Ensure date is a Date object for PDF generation
+    // Removed transaction ID as per requirement
+    // Ensure date is a Date object for PDF generation
     const transactionDate =
       receiptTransaction.date instanceof Date
         ? receiptTransaction.date
@@ -884,7 +891,7 @@ export default function CashierPage() {
     doc.line(margin, y, 80 - margin, y);
 
     // Save the PDF
-    doc.save(`struk-${receiptTransaction.id}.pdf`);
+    doc.save(`struk-${getShortTransactionId(receiptTransaction.id)}.pdf`);
   };
   const formatDateTime = (date: Date | string) => {
     // Ensure date is a Date object
@@ -1034,11 +1041,13 @@ export default function CashierPage() {
                                   {product.stock}
                                 </span>{" "}
                                 {product.stock < 5 && (
-                                  <span className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
-                                    product.stock === 0
-                                      ? "bg-red-100 text-red-600"
-                                      : "bg-amber-100 text-amber-600"
-                                  }`}>
+                                  <span
+                                    className={`ml-1 text-xs px-1.5 py-0.5 rounded-full ${
+                                      product.stock === 0
+                                        ? "bg-red-100 text-red-600"
+                                        : "bg-amber-100 text-amber-600"
+                                    }`}
+                                  >
                                     {product.stock === 0 ? "Habis" : "Terbatas"}
                                   </span>
                                 )}
@@ -1126,8 +1135,12 @@ export default function CashierPage() {
                                     }
                                     disabled={(() => {
                                       // Find the product to check current stock
-                                      const product = products.find(p => p.id === item.id);
-                                      return product ? item.quantity >= product.stock : false;
+                                      const product = products.find(
+                                        (p) => p.id === item.id
+                                      );
+                                      return product
+                                        ? item.quantity >= product.stock
+                                        : false;
                                     })()}
                                   >
                                     +
@@ -1135,13 +1148,24 @@ export default function CashierPage() {
                                 </div>
                                 {(() => {
                                   // Check remaining stock
-                                  const product = products.find(p => p.id === item.id);
+                                  const product = products.find(
+                                    (p) => p.id === item.id
+                                  );
                                   if (product && product.stock > 0) {
-                                    const stockLeft = product.stock - item.quantity;
+                                    const stockLeft =
+                                      product.stock - item.quantity;
                                     if (stockLeft === 0) {
-                                      return <span className="text-xs text-red-500 mt-1">Stok maksimum</span>;
+                                      return (
+                                        <span className="text-xs text-red-500 mt-1">
+                                          Stok maksimum
+                                        </span>
+                                      );
                                     } else if (stockLeft <= 3) {
-                                      return <span className="text-xs text-amber-500 mt-1">Sisa {stockLeft}</span>;
+                                      return (
+                                        <span className="text-xs text-amber-500 mt-1">
+                                          Sisa {stockLeft}
+                                        </span>
+                                      );
                                     }
                                   }
                                   return null;
@@ -1259,7 +1283,7 @@ export default function CashierPage() {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold text-lg">
-                                  {transaction.id}
+                                  {formatTransactionId(transaction.id)}
                                 </h3>
                                 <Badge
                                   variant={
@@ -1907,10 +1931,7 @@ export default function CashierPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>ID Transaksi:</span>
-                    <span className="font-mono">{lastTransaction.id}</span>
-                  </div>{" "}
+                  {" "}
                   <div className="flex justify-between">
                     <span>Tanggal:</span>
                     <span>
