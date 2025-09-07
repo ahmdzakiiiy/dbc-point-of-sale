@@ -24,9 +24,9 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    const { name, stock, price, image_url } = body;
+    const { name, stock, price, base_price, image_url } = body;
 
-    if (!name || isNaN(stock) || isNaN(price)) {
+    if (!name || isNaN(stock) || isNaN(price) || isNaN(base_price)) {
       return NextResponse.json(
         { error: "Data produk tidak lengkap atau tidak valid" },
         { status: 400 }
@@ -39,6 +39,7 @@ export async function POST(req: Request) {
         name,
         stock: Number(stock),
         price: Number(price),
+        base_price: Number(base_price),
         image_url,
       })
       .select()
