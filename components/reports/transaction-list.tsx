@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatTransactionId } from "@/lib/utils";
 import {
   Table,
   TableBody,
@@ -85,7 +86,7 @@ export function TransactionList({
                 transactions.map((transaction) => (
                   <TableRow key={transaction.id}>
                     <TableCell className="font-medium text-xs sm:text-sm py-2 sm:py-4">
-                      {transaction.id.substring(0, 8)}...
+                      {formatTransactionId(transaction.id)}
                     </TableCell>
                     <TableCell className="text-xs sm:text-sm py-2 sm:py-4 text-center">
                       {formatDate(transaction.date)}

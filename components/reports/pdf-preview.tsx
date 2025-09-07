@@ -1,4 +1,5 @@
 import { FileText } from "lucide-react";
+import { formatTransactionId } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -139,7 +140,7 @@ export function PDFPreview({
                             {index + 1}
                           </td>
                           <td className="p-1 sm:p-2 text-center">
-                            {transaction.id.substring(0, 8)}...
+                            {formatTransactionId(transaction.id)}
                           </td>
                           <td className="p-1 sm:p-2 text-center">
                             {formatDate(transaction.date)}
