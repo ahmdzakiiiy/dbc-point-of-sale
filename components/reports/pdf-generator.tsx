@@ -13,6 +13,7 @@ interface GeneratePDFProps {
   totalAmount: number;
   totalDiscount: number;
   grossAmount: number;
+  totalProfit?: number;
 }
 
 export function generatePDFReport({
@@ -21,6 +22,7 @@ export function generatePDFReport({
   totalAmount,
   totalDiscount,
   grossAmount,
+  totalProfit = 0,
 }: GeneratePDFProps) {
   if (!date) return;
 
@@ -109,6 +111,13 @@ export function generatePDFReport({
     align: "center",
   });
   rowY += rowHeight;
+  
+  // Row 6: Total Profit
+  doc.text("Total Profit", leftCol, rowY, { align: "center" });
+  doc.text(`Rp ${formatCurrency(totalProfit)}`, rightCol, rowY, {
+    align: "center",
+  });
+  rowY += rowHeight;
 
   // Draw a line below the table
   doc.line(20, rowY, 190, rowY);
@@ -125,11 +134,12 @@ export function generatePDFReport({
     });
   } else {
     // Header for transaction details table
-    doc.text("No.", 25, yPos, { align: "center" });
-    doc.text("ID Transaksi", 60, yPos, { align: "center" });
-    doc.text("Tanggal", 105, yPos, { align: "center" });
-    doc.text("Diskon", 150, yPos, { align: "center" });
-    doc.text("Total", 180, yPos, { align: "center" });
+    doc.text("No.", 20, yPos, { align: "center" });
+    doc.text("ID Transaksi", 50, yPos, { align: "center" });
+    doc.text("Tanggal", 90, yPos, { align: "center" });
+    doc.text("Diskon", 125, yPos, { align: "center" });
+    doc.text("Total", 155, yPos, { align: "center" });
+    doc.text("Profit", 185, yPos, { align: "center" });
 
     yPos += 7;
     doc.line(20, yPos, 190, yPos);
@@ -142,11 +152,12 @@ export function generatePDFReport({
 
         // Add header to new page
         yPos = 20;
-        doc.text("No.", 25, yPos, { align: "center" });
-        doc.text("ID Transaksi", 60, yPos, { align: "center" });
-        doc.text("Tanggal", 105, yPos, { align: "center" });
-        doc.text("Diskon", 150, yPos, { align: "center" });
-        doc.text("Total", 180, yPos, { align: "center" });
+        doc.text("No.", 20, yPos, { align: "center" });
+        doc.text("ID Transaksi", 50, yPos, { align: "center" });
+        doc.text("Tanggal", 90, yPos, { align: "center" });
+        doc.text("Diskon", 125, yPos, { align: "center" });
+        doc.text("Total", 155, yPos, { align: "center" });
+        doc.text("Profit", 185, yPos, { align: "center" });
 
         yPos += 7;
         doc.line(20, yPos, 190, yPos);
@@ -154,25 +165,34 @@ export function generatePDFReport({
       }
 
       // Row for each transaction
-      doc.text(`${index + 1}`, 25, yPos, { align: "center" });
-      doc.text(`${formatTransactionId(transaction.id)}`, 60, yPos, {
+      doc.text(`${index + 1}`, 20, yPos, { align: "center" });
+      doc.text(`${formatTransactionId(transaction.id)}`, 50, yPos, {
         align: "center",
       });
-      doc.text(`${formatDate(transaction.date)}`, 105, yPos, {
+      doc.text(`${formatDate(transaction.date)}`, 90, yPos, {
         align: "center",
       });
 
       if (transaction.discount > 0) {
-        doc.text(`Rp ${formatCurrency(transaction.discount)}`, 150, yPos, {
+        doc.text(`Rp ${formatCurrency(transaction.discount)}`, 125, yPos, {
           align: "center",
         });
       } else {
-        doc.text("-", 150, yPos, { align: "center" });
+        doc.text("-", 125, yPos, { align: "center" });
       }
 
-      doc.text(`Rp ${formatCurrency(transaction.total)}`, 180, yPos, {
+      doc.text(`Rp ${formatCurrency(transaction.total)}`, 155, yPos, {
         align: "center",
       });
+      
+      // Add profit column
+      if (transaction.profit !== undefined && transaction.profit > 0) {
+        doc.text(`Rp ${formatCurrency(transaction.profit)}`, 185, yPos, {
+          align: "center",
+        });
+      } else {
+        doc.text("-", 185, yPos, { align: "center" });
+      }
 
       yPos += 7; // Move to next row
     });

@@ -25,6 +25,7 @@ interface PDFPreviewProps {
   totalDiscount: number;
   grossAmount: number;
   onConfirmDownload: () => void;
+  totalProfit?: number;
 }
 
 export function PDFPreview({
@@ -36,6 +37,7 @@ export function PDFPreview({
   totalDiscount,
   grossAmount,
   onConfirmDownload,
+  totalProfit = 0,
 }: PDFPreviewProps) {
   if (!date) return null;
 
@@ -102,10 +104,16 @@ export function PDFPreview({
                       Rp {formatCurrency(totalDiscount)}
                     </span>
                   </div>
-                  <div className="flex justify-between col-span-2">
+                  <div className="flex justify-between">
                     <span>Total Pendapatan Bersih:</span>
                     <span className="font-medium text-green-600">
                       Rp {formatCurrency(totalAmount)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Total Profit:</span>
+                    <span className="font-medium text-blue-600">
+                      Rp {formatCurrency(totalProfit)}
                     </span>
                   </div>
                 </div>
@@ -131,6 +139,7 @@ export function PDFPreview({
                         <th className="p-1 sm:p-2 text-center">Tanggal</th>
                         <th className="p-1 sm:p-2 text-center">Diskon</th>
                         <th className="p-1 sm:p-2 text-center">Total</th>
+                        <th className="p-1 sm:p-2 text-right">Profit</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -157,12 +166,21 @@ export function PDFPreview({
                           <td className="p-1 sm:p-2 text-center">
                             Rp {formatCurrency(transaction.total)}
                           </td>
+                          <td className="p-1 sm:p-2 text-right">
+                            {transaction.profit !== undefined ? (
+                              <span className="text-blue-600">
+                                Rp {formatCurrency(transaction.profit)}
+                              </span>
+                            ) : (
+                              <span>-</span>
+                            )}
+                          </td>
                         </tr>
                       ))}
                       {transactions.length > 10 && (
                         <tr>
                           <td
-                            colSpan={5}
+                            colSpan={6}
                             className="p-1 sm:p-2 text-center text-muted-foreground"
                           >
                             ... dan {transactions.length - 10} transaksi lainnya

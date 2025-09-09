@@ -6,6 +6,7 @@ import { useState, useEffect } from "react";
 import { jsPDF } from "jspdf";
 import Image from "next/image";
 import { formatTransactionId, getShortTransactionId } from "@/lib/utils";
+import { PaymentMethod, PAYMENT_METHODS, getPaymentMethodInfo } from "@/lib/payment-types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -49,6 +50,11 @@ import {
   Calendar,
   Tag,
   Loader2,
+  Banknote,
+  QrCode,
+  Wallet,
+  CreditCard,
+  Clock,
 } from "lucide-react";
 import DashboardNav from "@/components/dashboard-nav";
 import ProductImagePlaceholder from "@/components/product-image-placeholder";
@@ -84,8 +90,10 @@ type Transaction = {
   subtotal: number;
   discount?: Discount;
   total: number;
-  cashReceived: number;
-  change: number;
+  paymentMethod: PaymentMethod;
+  cashReceived?: number | null; // Opsional jika bukan cash
+  change?: number | null; // Opsional jika bukan cash
+  referenceId?: string | null; // Nomor referensi untuk pembayaran non-cash
   cashier: string;
   status: "completed" | "refunded";
 };
@@ -122,6 +130,10 @@ export default function CashierPage() {
   );
   const [discountValue, setDiscountValue] = useState("");
   const [discountApplied, setDiscountApplied] = useState(false);
+  
+  // Payment method state
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("cash");
+  const [referenceId, setReferenceId] = useState("");
 
   // Enhanced discount input handling
   const formatDiscountValue = (amount: number | string) => {
@@ -498,6 +510,8 @@ export default function CashierPage() {
     setDiscountType("percentage");
     setDiscountValue("");
     setDiscountApplied(false);
+    setPaymentMethod("cash");
+    setReferenceId("");
   };
   const handlePayment = async () => {
     setIsProcessing(true);
@@ -527,8 +541,18 @@ export default function CashierPage() {
         ? calculateDiscount()
         : { type: "fixed", value: 0, amount: 0 };
       const total = calculateTotal();
-      const cashAmountValue = getNumericValue(cashAmount);
-      const change = cashAmountValue - total;
+      // Validasi metode pembayaran
+      if (paymentMethod !== "cash" && !referenceId.trim()) {
+        alert("Nomor referensi pembayaran diperlukan untuk metode pembayaran ini");
+        setIsProcessing(false);
+        return;
+      }
+      
+      // Untuk metode cash, ambil nilai dari input
+      // Untuk metode non-cash, tidak perlu cashReceived dan change
+      const cashAmountValue = paymentMethod === "cash" ? getNumericValue(cashAmount) : null;
+      const change = paymentMethod === "cash" ? cashAmountValue! - total : null;
+      
       // Gunakan userId (UUID) alih-alih username untuk foreign key
       const cashierId = localStorage.getItem("userId");
       const cashierName = localStorage.getItem("username") || "Admin";
@@ -541,8 +565,10 @@ export default function CashierPage() {
         subtotal,
         discount,
         total,
+        paymentMethod,
         cashReceived: cashAmountValue,
         change,
+        referenceId: paymentMethod !== "cash" ? referenceId : null,
         cashierId,
         cashierName,
       });
@@ -563,8 +589,10 @@ export default function CashierPage() {
           subtotal,
           discount,
           total,
+          paymentMethod,
           cashReceived: cashAmountValue,
           change,
+          referenceId: paymentMethod !== "cash" ? referenceId : null,
           cashierId, // Kirim ID (UUID)
           cashierName, // Kirim nama untuk tampilan
         }),
@@ -853,26 +881,47 @@ export default function CashierPage() {
     doc.text(totalValueText, 80 - margin - totalValueWidth, y);
     y += 5;
 
-    // Cash and change
+    // Payment Method
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
-    const cashText = `TUNAI:`;
-    doc.text(cashText, margin, y);
-    const cashValueText = `Rp ${receiptTransaction.cashReceived.toLocaleString(
-      "id-ID"
-    )}`;
-    const cashValueWidth = doc.getTextWidth(cashValueText);
-    doc.text(cashValueText, 80 - margin - cashValueWidth, y);
+    const methodText = `METODE PEMBAYARAN:`;
+    doc.text(methodText, margin, y);
+    const methodName = getPaymentMethodInfo(receiptTransaction.paymentMethod || 'cash').name;
+    const methodValueText = methodName;
+    const methodValueWidth = doc.getTextWidth(methodValueText);
+    doc.text(methodValueText, 80 - margin - methodValueWidth, y);
     y += 4;
+    
+    // For cash payment, show cash amount and change
+    if (receiptTransaction.paymentMethod === 'cash' && receiptTransaction.cashReceived) {
+      const cashText = `TUNAI:`;
+      doc.text(cashText, margin, y);
+      const cashValueText = `Rp ${receiptTransaction.cashReceived.toLocaleString(
+        "id-ID"
+      )}`;
+      const cashValueWidth = doc.getTextWidth(cashValueText);
+      doc.text(cashValueText, 80 - margin - cashValueWidth, y);
+      y += 4;
 
-    const changeText = `KEMBALI:`;
-    doc.text(changeText, margin, y);
-    const changeValueText = `Rp ${receiptTransaction.change.toLocaleString(
-      "id-ID"
-    )}`;
-    const changeValueWidth = doc.getTextWidth(changeValueText);
-    doc.text(changeValueText, 80 - margin - changeValueWidth, y);
-    y += 4;
+      const changeText = `KEMBALI:`;
+      doc.text(changeText, margin, y);
+      const changeValueText = `Rp ${(receiptTransaction.change || 0).toLocaleString(
+        "id-ID"
+      )}`;
+      const changeValueWidth = doc.getTextWidth(changeValueText);
+      doc.text(changeValueText, 80 - margin - changeValueWidth, y);
+      y += 4;
+    }
+    
+    // For non-cash payment, show reference ID if available
+    else if (receiptTransaction.referenceId) {
+      const refText = `NOMOR REFERENSI:`;
+      doc.text(refText, margin, y);
+      const refValueText = receiptTransaction.referenceId;
+      const refValueWidth = doc.getTextWidth(refValueText);
+      doc.text(refValueText, 80 - margin - refValueWidth, y);
+      y += 4;
+    }
 
     // Add separator
     doc.line(margin, y, 80 - margin, y);
@@ -1349,7 +1398,7 @@ export default function CashierPage() {
                                 </div>
                                 <div className="text-sm text-muted-foreground">
                                   Kembalian: Rp{" "}
-                                  {transaction.change.toLocaleString("id-ID")}
+                                  {(transaction.change || 0).toLocaleString("id-ID")}
                                 </div>
                               </div>
                               <div className="flex gap-2">
@@ -1626,82 +1675,143 @@ export default function CashierPage() {
               </div>
 
               <Separator />
-
-              {/* Enhanced Cash Payment Input */}
+              
+              {/* Payment Method Selection */}
               <div className="space-y-4">
-                <h3 className="font-semibold">Pembayaran Cash</h3>
-                <div className="space-y-2">
-                  <Label htmlFor="cash">Jumlah Uang Diterima</Label>
-                  <div className="relative">
-                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
-                      Rp
-                    </div>
-                    <Input
-                      id="cash"
-                      type="text"
-                      placeholder="0"
-                      value={cashAmount}
-                      onChange={(e) => handleCashAmountChange(e.target.value)}
-                      onKeyDown={handleCashKeyDown}
-                      className="text-lg pl-10 pr-16"
-                      style={{
-                        MozAppearance: "textfield",
-                        WebkitAppearance: "none",
-                      }}
-                    />
-                    <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 w-6 p-0 hover:bg-gray-100"
-                        onClick={() => adjustCashAmount(true)}
-                      >
-                        <ChevronUp className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-4 w-6 p-0 hover:bg-gray-100"
-                        onClick={() => adjustCashAmount(false)}
-                      >
-                        <ChevronDown className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Gunakan tombol ↑↓ atau klik panah untuk menambah/mengurangi
-                    Rp 1.000
-                  </p>
-                </div>
-
-                {cashAmount &&
-                  getNumericValue(cashAmount) >= calculateTotal() && (
-                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                      <div className="flex justify-between items-center">
-                        <span className="font-medium text-green-700">
-                          Kembalian:
-                        </span>
-                        <span className="text-xl font-bold text-green-800">
-                          Rp{" "}
-                          {(
-                            getNumericValue(cashAmount) - calculateTotal()
-                          ).toLocaleString("id-ID")}
-                        </span>
+                <h3 className="font-semibold">Metode Pembayaran</h3>
+                <RadioGroup 
+                  value={paymentMethod} 
+                  onValueChange={(value: PaymentMethod) => setPaymentMethod(value)}
+                  className="grid grid-cols-2 gap-4 pt-2"
+                >
+                  {PAYMENT_METHODS.map((method) => {
+                    // Get icon component based on method.icon
+                    let IconComponent;
+                    switch(method.icon) {
+                      case 'banknote': IconComponent = Banknote; break;
+                      case 'qr-code': IconComponent = QrCode; break;
+                      case 'wallet': IconComponent = Wallet; break;
+                      case 'credit-card': IconComponent = CreditCard; break;
+                      default: IconComponent = Banknote; 
+                    }
+                    
+                    return (
+                      <div key={method.id} className="flex items-start space-x-2">
+                        <RadioGroupItem value={method.id} id={`payment-${method.id}`} />
+                        <div className="grid gap-1.5 leading-none">
+                          <Label htmlFor={`payment-${method.id}`} className="flex items-center gap-2 font-medium cursor-pointer">
+                            <IconComponent className="h-4 w-4" />
+                            {method.name}
+                          </Label>
+                          <p className="text-xs text-muted-foreground">{method.description}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
-
-                {cashAmount &&
-                  getNumericValue(cashAmount) < calculateTotal() && (
-                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
-                      <div className="text-red-700 text-sm">
-                        Uang yang diterima kurang dari total pembayaran
-                      </div>
-                    </div>
-                  )}
+                    )
+                  })}
+                </RadioGroup>
               </div>
+
+              {paymentMethod === 'cash' ? (
+                // Cash payment fields
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Detail Pembayaran Cash</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="cash">Jumlah Uang Diterima</Label>
+                    <div className="relative">
+                      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-sm text-muted-foreground">
+                        Rp
+                      </div>
+                      <Input
+                        id="cash"
+                        type="text"
+                        placeholder="0"
+                        value={cashAmount}
+                        onChange={(e) => handleCashAmountChange(e.target.value)}
+                        onKeyDown={handleCashKeyDown}
+                        className="text-lg pl-10 pr-16"
+                        style={{
+                          MozAppearance: "textfield",
+                          WebkitAppearance: "none",
+                        }}
+                      />
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex flex-col">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-6 p-0 hover:bg-gray-100"
+                          onClick={() => adjustCashAmount(true)}
+                        >
+                          <ChevronUp className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="h-4 w-6 p-0 hover:bg-gray-100"
+                          onClick={() => adjustCashAmount(false)}
+                        >
+                          <ChevronDown className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Gunakan tombol ↑↓ atau klik panah untuk menambah/mengurangi
+                      Rp 1.000
+                    </p>
+                  </div>
+
+                  {cashAmount &&
+                    getNumericValue(cashAmount) >= calculateTotal() && (
+                      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                        <div className="flex justify-between items-center">
+                          <span className="font-medium text-green-700">
+                            Kembalian:
+                          </span>
+                          <span className="text-xl font-bold text-green-800">
+                            Rp{" "}
+                            {(
+                              getNumericValue(cashAmount) - calculateTotal()
+                            ).toLocaleString("id-ID")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                  {cashAmount &&
+                    getNumericValue(cashAmount) < calculateTotal() && (
+                      <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                        <div className="text-red-700 text-sm">
+                          Uang yang diterima kurang dari total pembayaran
+                        </div>
+                      </div>
+                    )}
+                </div>
+              ) : (
+                // Non-cash payment details (for e-wallet or bank transfer)
+                <div className="space-y-4">
+                  <h3 className="font-semibold">Detail Pembayaran {getPaymentMethodInfo(paymentMethod).name}</h3>
+                  <div className="space-y-2">
+                    <Label htmlFor="reference-id">Nomor Referensi/ID Transaksi</Label>
+                    <div className="relative">
+                      <Input
+                        id="reference-id"
+                        type="text"
+                        placeholder="Contoh: ABC123456789"
+                        value={referenceId}
+                        onChange={(e) => setReferenceId(e.target.value)}
+                        className="text-lg"
+                      />
+                      <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Masukkan nomor referensi atau ID transaksi dari {getPaymentMethodInfo(paymentMethod).name}
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>{" "}
             {error && (
               <div className="p-4 mb-4 bg-red-50 border border-red-200 rounded-lg">
@@ -1716,8 +1826,9 @@ export default function CashierPage() {
                 onClick={handlePayment}
                 className="bg-violet-500 hover:bg-violet-600"
                 disabled={
-                  !cashAmount ||
-                  getNumericValue(cashAmount) < calculateTotal() ||
+                  (paymentMethod === 'cash' && 
+                    (!cashAmount || getNumericValue(cashAmount) < calculateTotal())) ||
+                  (paymentMethod !== 'cash' && !referenceId.trim()) ||
                   isProcessing
                 }
               >
@@ -1870,18 +1981,36 @@ export default function CashierPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Uang Diterima:</span>
+                    <span>Metode Pembayaran:</span>
                     <span>
-                      Rp{" "}
-                      {selectedTransaction.cashReceived.toLocaleString("id-ID")}
+                      {getPaymentMethodInfo(selectedTransaction.paymentMethod || 'cash').name}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Kembalian:</span>
-                    <span>
-                      Rp {selectedTransaction.change.toLocaleString("id-ID")}
-                    </span>
-                  </div>
+                  
+                  {selectedTransaction.paymentMethod === 'cash' && selectedTransaction.cashReceived && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>Uang Diterima:</span>
+                        <span>
+                          Rp{" "}
+                          {selectedTransaction.cashReceived.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Kembalian:</span>
+                        <span>
+                          Rp {(selectedTransaction.change || 0).toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {selectedTransaction.paymentMethod !== 'cash' && selectedTransaction.referenceId && (
+                    <div className="flex justify-between">
+                      <span>Nomor Referensi:</span>
+                      <span>{selectedTransaction.referenceId}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -2011,17 +2140,35 @@ export default function CashierPage() {
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span>TUNAI:</span>
+                    <span>METODE PEMBAYARAN:</span>
                     <span>
-                      Rp {lastTransaction.cashReceived.toLocaleString("id-ID")}
+                      {getPaymentMethodInfo(lastTransaction.paymentMethod || 'cash').name}
                     </span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>KEMBALI:</span>
-                    <span>
-                      Rp {lastTransaction.change.toLocaleString("id-ID")}
-                    </span>
-                  </div>
+                  
+                  {lastTransaction.paymentMethod === 'cash' && lastTransaction.cashReceived && (
+                    <>
+                      <div className="flex justify-between">
+                        <span>TUNAI:</span>
+                        <span>
+                          Rp {lastTransaction.cashReceived.toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>KEMBALI:</span>
+                        <span>
+                          Rp {(lastTransaction.change || 0).toLocaleString("id-ID")}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                  
+                  {lastTransaction.paymentMethod !== 'cash' && lastTransaction.referenceId && (
+                    <div className="flex justify-between">
+                      <span>REF ID:</span>
+                      <span>{lastTransaction.referenceId}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-center text-xs text-muted-foreground border-t pt-4">

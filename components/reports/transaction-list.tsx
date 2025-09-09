@@ -48,18 +48,21 @@ export function TransactionList({
                 <TableHead className="text-xs sm:text-sm text-center">
                   Tanggal
                 </TableHead>
-                <TableHead className="text-xs sm:text-sm text-right">
+                <TableHead className="text-xs sm:text-sm text-center">
                   Diskon
                 </TableHead>
                 <TableHead className="text-xs sm:text-sm text-center">
                   Total
+                </TableHead>
+                <TableHead className="text-xs sm:text-sm text-right">
+                  Profit
                 </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center py-8">
+                  <TableCell colSpan={5} className="text-center py-8">
                     <Loader2 className="h-6 w-6 animate-spin inline-block mr-2 text-violet-500" />
                     Memuat transaksi...
                   </TableCell>
@@ -67,7 +70,7 @@ export function TransactionList({
               ) : error ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-8 text-red-500"
                   >
                     {error}
@@ -76,7 +79,7 @@ export function TransactionList({
               ) : transactions.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-8 text-gray-500"
                   >
                     Tidak ada transaksi pada bulan ini.
@@ -91,7 +94,7 @@ export function TransactionList({
                     <TableCell className="text-xs sm:text-sm py-2 sm:py-4 text-center">
                       {formatDate(transaction.date)}
                     </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
+                    <TableCell className="text-xs sm:text-sm text-center py-2 sm:py-4">
                       {transaction.discount > 0 ? (
                         <span className="text-red-600">
                           Rp {formatCurrency(transaction.discount)}
@@ -100,8 +103,17 @@ export function TransactionList({
                         <span className="text-muted-foreground">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
+                    <TableCell className="text-xs sm:text-sm text-center py-2 sm:py-4">
                       Rp {formatCurrency(transaction.total)}
+                    </TableCell>
+                    <TableCell className="text-xs sm:text-sm text-right py-2 sm:py-4">
+                      {transaction.profit !== undefined ? (
+                        <span className="text-blue-600">
+                          Rp {formatCurrency(transaction.profit)}
+                        </span>
+                      ) : (
+                        <span className="text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))

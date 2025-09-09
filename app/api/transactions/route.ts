@@ -29,7 +29,59 @@ export async function GET(req: Request) {
 
     if (error) throw error;
 
-    return NextResponse.json({ transactions: data }, { status: 200 });
+    // For each transaction, fetch items to calculate profit
+    const transactionsWithProfit = await Promise.all(data.map(async (transaction) => {
+      const { data: items, error: itemsError } = await supabase
+        .from("transaction_items")
+        .select("*")
+        .eq("transaction_id", transaction.id);
+      
+      if (itemsError || !items) {
+        console.error("Error fetching transaction items:", itemsError);
+        return transaction;
+      }
+
+      // Calculate profit as sum of (price - base_price) * quantity for each item
+      let totalProfit = 0;
+      
+      // Process each item to calculate the profit
+      for (const item of items) {
+        let itemBasePrice = item.base_price;
+        
+        // If base_price is missing in transaction_items, try to get it from products table
+        if (itemBasePrice === null || itemBasePrice === undefined) {
+          if (item.product_id) {
+            const { data: product } = await supabase
+              .from("products")
+              .select("base_price")
+              .eq("id", item.product_id)
+              .single();
+              
+            if (product && product.base_price) {
+              itemBasePrice = product.base_price;
+              console.log(`Retrieved base_price ${itemBasePrice} for product ${item.product_name} from products table`);
+            }
+          }
+        }
+        
+        const itemProfit = itemBasePrice 
+          ? (item.price - itemBasePrice) * item.quantity 
+          : 0;
+          
+        console.log(`Item ${item.product_name}: price=${item.price}, base_price=${itemBasePrice}, quantity=${item.quantity}, profit=${itemProfit}`);
+        
+        totalProfit += itemProfit;
+      }
+      
+      console.log(`Transaction ${transaction.id} - Total profit: ${totalProfit}`);
+
+      return {
+        ...transaction,
+        profit: totalProfit,
+      };
+    }));
+
+    return NextResponse.json({ transactions: transactionsWithProfit }, { status: 200 });
   } catch (error: any) {
     console.error("Error fetching transactions:", error);
     return NextResponse.json(

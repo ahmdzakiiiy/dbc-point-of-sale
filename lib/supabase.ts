@@ -1,5 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 
+// Enable debugging for types - this is not part of supabase but helps development
+// @ts-ignore
+if (typeof window !== "undefined" && !window.__debugTypes) {
+  // @ts-ignore
+  window.__debugTypes = true;
+  console.log("Debugging types enabled");
+}
+
 // When running in Node.js scripts, process.env doesn't automatically load .env.local
 // In next.js pages, these will be properly loaded
 const supabaseUrl =
@@ -24,6 +32,7 @@ export type Product = {
   name: string;
   stock: number;
   price: number;
+  base_price?: number;
   image_url?: string;
   created_at?: string;
   updated_at?: string;
@@ -36,6 +45,11 @@ export type Transaction = {
   discount_amount: number;
   user_id?: string;
   created_at?: string;
+  profit?: number; // Added for profit calculation support
+  payment_method?: string; // Added for payment method support
+  cash_received?: number; // Added for cash payment details
+  cash_change?: number; // Added for cash payment details
+  reference_id?: string; // Added for digital payment reference
 };
 
 export type TransactionItem = {
@@ -45,5 +59,6 @@ export type TransactionItem = {
   product_name: string;
   quantity: number;
   price: number;
+  base_price?: number;
   created_at?: string;
 };

@@ -50,6 +50,7 @@ export default function ReportsPage() {
         }
 
         const data = await response.json();
+        console.log("API Response transactions:", data.transactions);
         setTransactions(data.transactions || []);
         setError(null);
       } catch (err) {
@@ -65,7 +66,19 @@ export default function ReportsPage() {
 
   // Format and calculate totals
   const formattedTransactions: FormattedTransaction[] = formatTransactions(transactions);
-  const { totalAmount, totalDiscount, grossAmount } = calculateTotals(formattedTransactions);
+  
+  // Ensure profit values are properly handled
+  formattedTransactions.forEach(transaction => {
+    if (transaction.profit === undefined || transaction.profit === null) {
+      transaction.profit = 0;
+    } else {
+      transaction.profit = Number(transaction.profit);
+    }
+  });
+  
+  console.log("Formatted transactions with profit:", formattedTransactions);
+  const { totalAmount, totalDiscount, grossAmount, totalProfit } = calculateTotals(formattedTransactions);
+  console.log("Calculated totalProfit:", totalProfit);
 
   const openPdfPreview = () => {
     setPdfPreviewOpen(true);
@@ -78,6 +91,7 @@ export default function ReportsPage() {
       totalAmount,
       totalDiscount,
       grossAmount,
+      totalProfit,
     });
     setPdfPreviewOpen(false);
   };
@@ -126,6 +140,7 @@ export default function ReportsPage() {
           totalAmount={totalAmount}
           totalDiscount={totalDiscount}
           grossAmount={grossAmount}
+          totalProfit={totalProfit}
         />
 
         {/* Transaction List Component */}
@@ -144,6 +159,7 @@ export default function ReportsPage() {
           totalAmount={totalAmount}
           totalDiscount={totalDiscount}
           grossAmount={grossAmount}
+          totalProfit={totalProfit}
           onConfirmDownload={confirmDownload}
         />
       </main>

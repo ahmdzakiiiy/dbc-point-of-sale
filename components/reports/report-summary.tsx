@@ -11,6 +11,7 @@ interface ReportSummaryProps {
   totalAmount: number;
   totalDiscount: number;
   grossAmount: number;
+  totalProfit?: number;
 }
 
 export function ReportSummary({
@@ -19,6 +20,7 @@ export function ReportSummary({
   totalAmount,
   totalDiscount,
   grossAmount,
+  totalProfit = 0,
 }: ReportSummaryProps) {
   return (
     <Card className="mb-3 sm:mb-4 md:mb-6 shadow-sm">
@@ -28,7 +30,7 @@ export function ReportSummary({
         </CardTitle>
       </CardHeader>
       <CardContent className="p-2 sm:p-4 md:p-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 sm:gap-3 md:gap-4">
           <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
             <div className="text-xs sm:text-sm text-muted-foreground">
               Total Transaksi
@@ -59,6 +61,14 @@ export function ReportSummary({
             </div>
             <div className="text-lg sm:text-xl md:text-2xl font-bold text-green-600">
               Rp {formatCurrency(totalAmount)}
+            </div>
+          </div>
+          <div className="p-2 sm:p-3 md:p-4 border rounded-lg">
+            <div className="text-xs sm:text-sm text-muted-foreground">
+              Total Profit
+            </div>
+            <div className="text-lg sm:text-xl md:text-2xl font-bold text-blue-600">
+              Rp {formatCurrency(totalProfit)}
             </div>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
+import { PaymentMethod } from "@/lib/payment-types";
 
 export async function POST(req: Request) {
   try {
@@ -12,8 +13,10 @@ export async function POST(req: Request) {
       subtotal,
       discount,
       total,
+      paymentMethod = 'cash', // Default ke cash jika tidak ada
       cashReceived,
       change,
+      referenceId,
       cashierId,
       cashierName,
     } = body;
@@ -43,6 +46,10 @@ export async function POST(req: Request) {
       .insert({
         total_amount: total,
         discount_amount: discount?.amount || 0,
+        payment_method: paymentMethod,
+        cash_received: paymentMethod === 'cash' ? cashReceived : null,
+        cash_change: paymentMethod === 'cash' ? change : null,
+        reference_id: paymentMethod !== 'cash' ? referenceId : null,
         user_id: cashierId, // Gunakan UUID user id
       })
       .select()
@@ -64,14 +71,27 @@ export async function POST(req: Request) {
         { error: "Gagal mendapatkan data transaksi yang dibuat" },
         { status: 500 }
       );
-    } // Create transaction items
-    const transactionItems = items.map((item) => ({
-      transaction_id: transaction.id,
-      product_id: item.id,
-      product_name: item.name,
-      quantity: item.quantity,
-      price: item.price,
-    }));
+    }
+    
+    // Create transaction items - with base_price if available
+    const transactionItems = items.map((item) => {
+      // Create base object without base_price
+      const transactionItem = {
+        transaction_id: transaction.id,
+        product_id: item.id,
+        product_name: item.name,
+        quantity: item.quantity,
+        price: item.price,
+      };
+      
+      // Add base_price only if it exists in the item
+      if (item.base_price !== undefined) {
+        // @ts-ignore - We're adding this dynamically to handle schema changes
+        transactionItem.base_price = item.base_price;
+      }
+      
+      return transactionItem;
+    });
 
     console.log("Membuat item transaksi:", transactionItems);
 
@@ -82,10 +102,40 @@ export async function POST(req: Request) {
 
     if (itemsError) {
       console.error("Error saat menambahkan item transaksi:", itemsError);
-      return NextResponse.json(
-        { error: "Gagal menambahkan item transaksi: " + itemsError.message },
-        { status: 500 }
-      );
+      
+      // Check if the error is related to the base_price column
+      if (itemsError.message && itemsError.message.includes("base_price")) {
+        console.warn("Column base_price tidak ditemukan. Mencoba kembali tanpa base_price...");
+        
+        // Retry without base_price
+        const transactionItemsWithoutBasePrice = items.map((item) => ({
+          transaction_id: transaction.id,
+          product_id: item.id,
+          product_name: item.name,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+        
+        const { data: retryItems, error: retryError } = await supabase
+          .from("transaction_items")
+          .insert(transactionItemsWithoutBasePrice)
+          .select();
+          
+        if (retryError) {
+          console.error("Error saat retry menambahkan item transaksi:", retryError);
+          return NextResponse.json(
+            { error: "Gagal menambahkan item transaksi: " + retryError.message },
+            { status: 500 }
+          );
+        }
+        
+        console.log("Item transaksi berhasil dibuat (tanpa base_price):", retryItems?.length || 0, "item");
+      } else {
+        return NextResponse.json(
+          { error: "Gagal menambahkan item transaksi: " + itemsError.message },
+          { status: 500 }
+        );
+      }
     }
 
     console.log(
@@ -203,10 +253,13 @@ export async function POST(req: Request) {
           subtotal,
           discount,
           total,
-          cashReceived,
-          change,
+          paymentMethod,
+          cashReceived: paymentMethod === 'cash' ? cashReceived : null,
+          change: paymentMethod === 'cash' ? change : null,
+          referenceId: paymentMethod !== 'cash' ? referenceId : null,
           cashier: cashierName, // Gunakan nama kasir untuk display
           cashierId, // Juga kembalikan ID untuk referensi
+          status: "completed",
         },
         updatedProducts: updatedProducts || [], // Include updated products data
       },
